@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>BrowZer Hello World</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
+
+    body {
+      margin: 0;
+    }
+
+    h1 {
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      letter-spacing: 2px;
+      font-size: 48px;
+      margin: 0px;
+    }
+
+    h2 {
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      letter-spacing: 2px;
+      font-size: 36px;
+      margin: 0px;
+    }
+
+    h3 {
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      letter-spacing: 2px;
+      font-size: 26px;
+      margin: 20px;
+    }
+
+    h3 a {
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+
+    h3 a:hover {
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    h3 a:active {
+      text-decoration: none;
+      transform: translateY(1px) !important;
+      transition: all 0.3s ease;
+    }
+
+
+
+    p {
+      font-family: 'Open Sans', sans-serif;
+      letter-spacing: 1px;
+      font-size: 14px;
+      ;
+    }
+
+    p a {
+      color: #333333;
+      text-decoration: none;
+    }
+
+    p a:hover {
+      color: #ec1f2d;
+      text-decoration: underline;
+    }
+
+    button[name='action']   {
+      display: inline-block !important;
+      padding-left: 20px;
+      padding-right: 20px;
+      margin-top: 10px !important;
+      font-size: 11px !important;
+      line-height: 40px !important;
+      height: 50px !important;
+      border: none !important;
+      background: none !important;
+      vertical-align: middle !important;
+      text-align: center !important;
+      position: relative !important;
+      z-index: 1 !important;
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      overflow: hidden !important;
+      -webkit-transition: color 0.2s !important;
+      transition: color 0.2s !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      font-family: 'Open Sans' !important;
+      text-transform: uppercase !important;
+      border-radius: 8px !important;
+      box-shadow: 0 3px 9px 0 rgba(2, 115, 251, 0.3) !important;
+      cursor: pointer !important;
+    }
+
+    button[name='action'] {
+      background-color: #0273fb !important;
+      -webkit-box-shadow: 0 3px 9px 0 rgba(2, 115, 251, 0.3) !important;
+      -moz-box-shadow: 0 3px 9px 0 rgba(2, 115, 251, 0.3) !important;
+      box-shadow: 0 3px 9px 0 rgba(2, 115, 251, 0.3) !important;
+      color: white !important;
+    }
+
+    button[name='action']:hover {
+      outline: 0 !important;
+      filter: brightness(99%) !important;
+      box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05) !important;
+      transition: all 0.3s ease;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+    }
+
+    button[name='action']:active {
+      filter: brightness(95%) !important;
+      box-shadow: none !important;
+      transform: translateY(1px) !important;
+      transition: all 0.3s ease;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+    }
+
+    .header {
+      position: relative;
+      text-align: center;
+      background: rgb(244, 4, 77);
+      background: linear-gradient(80deg, rgba(244, 4, 77, 1) 0%, rgba(0, 108, 254, 1) 100%);
+      color: white;
+    }
+
+    .z {
+      width: 250px;
+      position: absolute;
+      margin-left: -125px;
+    }
+
+    .inner-header {
+      height: 75vh;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .flex {
+      /*Flexbox for containers*/
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .flex-row {
+      display: flex;
+      height: 100%;
+    }
+
+    .waves {
+      position: relative;
+      width: 100%;
+      height: 15vh;
+      margin-bottom: -7px;
+      /*Fix for safari gap*/
+      min-height: 100px;
+      max-height: 150px;
+    }
+
+    .content {
+      position: relative;
+      height: 10vh;
+      text-align: center;
+      background-color: white;
+    }
+
+    /* Animation */
+
+    .parallax>use {
+      animation: move-forever 25s cubic-bezier(.55, .5, .45, .5) infinite;
+    }
+
+    .parallax>use:nth-child(1) {
+      animation-delay: -2s;
+      animation-duration: 7s;
+    }
+
+    .parallax>use:nth-child(2) {
+      animation-delay: -3s;
+      animation-duration: 10s;
+    }
+
+    .parallax>use:nth-child(3) {
+      animation-delay: -4s;
+      animation-duration: 13s;
+    }
+
+    .parallax>use:nth-child(4) {
+      animation-delay: -5s;
+      animation-duration: 20s;
+    }
+
+    @keyframes move-forever {
+      0% {
+        transform: translate3d(-90px, 0, 0);
+      }
+
+      100% {
+        transform: translate3d(85px, 0, 0);
+      }
+    }
+
+    /*Shrinking for mobile*/
+    @media (max-width: 768px) {
+      .waves {
+        height: 40px;
+        min-height: 40px;
+      }
+
+      .content {
+        height: 30vh;
+      }
+
+      h1 {
+        font-size: 27px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+    }
+
+    .container {
+      padding-right: 15px;
+      padding-left: 15px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        width: 750px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .container {
+        width: 970px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .container {
+        width: 1170px;
+      }
+    }
+
+    .row {
+      margin-right: -15px;
+      margin-left: -15px;
+    }
+
+    .col-sm-12 {
+      position: relative;
+      min-height: 1px;
+      padding-right: 15px;
+      padding-left: 15px;
+    }
+
+    @keyframes spin-animation {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      25% {
+        transform: rotate(0deg);
+      }
+
+      75% {
+        transform: rotate(360deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin-image {
+      animation-name: spin-animation;
+      animation-duration: 2000ms;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- partial:index.partial.html -->
+  <!--Hey! This is the original version
+of Simple CSS Waves-->
+
+  <div class="header">
+
+    <!--Content before waves-->
+    <div class="inner-header flex">
+
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12" style="height: 250px;">
+            
+
+<svg id="Ziti_NG_Image" data-name="Ziti NG Image" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 116.9 117" class="z spin-image">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <path id="Lightning_Crashes" data-name="Lightning Crashes" class="cls-1" d="m58.7,13.5l-28.6,44.5,16.6,10.6,2.7-4.2,9.1,40.9,28.1-44.8-16.2-10.3-2.7,4.2-9-40.9Zm13.4,44.1l7.1,4.7-18.5,29-9-41-6.8,10.7-7-4.5,18.6-29.1,9,40.8,6.6-10.6Z"/>
+  <path class="cls-1" d="m58.5,117c-7.9,0-15.5-1.5-22.8-4.5-7-2.9-13.2-7.2-18.6-12.5-5.4-5.4-9.6-11.6-12.5-18.6-3.1-7.4-4.6-15-4.6-22.9s1.5-15.5,4.5-22.8c2.9-7,7.2-13.2,12.5-18.6,5.3-5.4,11.8-9.6,18.7-12.6C43,1.5,50.6,0,58.5,0s15.5,1.5,22.8,4.5c7,2.9,13.2,7.2,18.6,12.5,5.4,5.4,9.6,11.6,12.5,18.6,3.1,7.2,4.5,14.9,4.5,22.8s-1.5,15.5-4.5,22.8c-2.9,7-7.2,13.2-12.5,18.6-5.4,5.4-11.6,9.6-18.6,12.5-7.3,3.2-14.9,4.7-22.8,4.7Zm0-112.5c-14.5,0-27.9,5.6-38.2,15.8S4.5,44,4.5,58.4s5.6,27.9,15.8,38.2,23.8,15.8,38.2,15.8,27.9-5.6,38.2-15.8,15.8-23.8,15.8-38.2-5.6-27.9-15.8-38.2-23.7-15.7-38.2-15.7Z"/>
+</svg>
+       
+         
+        </div>
+          <div class="col-sm-12">
+            <h1>Awesomesauce!</h1>
+          </div>
+          <div class="col-sm-12">
+            <h2>Next up, save your token!</h2>
+            <button class="btn btn-primary btn-block mb16" name="action" type="button" onclick="window.location.href ='/download-token?token={{ .Token }}'">
+              Download Token
+            </button>
+            <p>This token will allow you to securely register enroll your device and grants you access to the demo services hosted by this service and protected using OpenZiti's application-embedded zero trust design</p>
+          </div>
+          <div class="col-sm-12">
+            <h3>Then, clone this 👉<a href="https://github.com/openziti-test-kitchen/appetizer.git">repository</a>: <pre>git clone https://github.com/openziti-test-kitchen/appetizer.git</pre></h3>
+            <h3>run the sample programs:</h3>
+            <pre>
+              go run clients/math.go httpService /mnt/v/temp/randomizer_MHCpAymh.json 1 + 2
+              go run clients/curlz.go httpService /mnt/v/temp/randomizer_MHCpAymh.json
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Waves Container-->
+    <div>
+      <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+        <defs>
+          <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+        </defs>
+        <g class="parallax">
+          <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.7" />
+          <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+          <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
+          <use xlink:href="#gentle-wave" x="48" y="7" fill="#fff" />
+        </g>
+      </svg>
+    </div>
+    <!--Waves end-->
+
+  </div>
+  <!--Header ends-->
+
+  <!--Content starts-->
+  <div class="content flex">
+    <p><a href="https://openziti.io">openziti.io</a></p>
+  </div>
+  <!--Content ends-->
+  <!-- partial -->
+
+</body>
+
+</html>
