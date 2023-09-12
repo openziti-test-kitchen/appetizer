@@ -16,6 +16,7 @@ func ServeHTTP(port int) {
 	svr := &http.Server{}
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(serveIndexHTML))
+	mux.Handle("/overview.png", http.HandlerFunc(serveOverview))
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(addToOpenZiti))
 	mux.Handle("/download-token", http.HandlerFunc(downloadToken))
 	svr.Handler = mux
@@ -26,6 +27,9 @@ func ServeHTTP(port int) {
 
 func serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./index.html")
+}
+func serveOverview(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./overview.png")
 }
 
 func addToOpenZiti(w http.ResponseWriter, r *http.Request) {
