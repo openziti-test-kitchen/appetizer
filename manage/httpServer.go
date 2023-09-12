@@ -29,10 +29,10 @@ func serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 }
 
 func addToOpenZiti(w http.ResponseWriter, r *http.Request) {
-	var email string
+	var name string
 	if r.URL.Query().Get("randomizer") != "" {
 		randomId, _ := generateRandomID(8)
-		email = "randomizer_" + randomId
+		name = "randomizer_" + randomId
 	} else {
 		err := r.ParseForm()
 		if err != nil {
@@ -40,16 +40,16 @@ func addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		email = r.Form.Get("email")
-		logrus.Printf("Received email: %s", email)
+		name = r.Form.Get("name")
+		logrus.Printf("Received name: %s", name)
 	}
-	if email == "" {
-		http.Error(w, "Invalid input. email form field not provided", http.StatusBadRequest)
+	if name == "" {
+		http.Error(w, "Invalid input. name form field not provided", http.StatusBadRequest)
 		return
 	}
 
-	DeleteIdentity(email)
-	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, email, "demo.clients")
+	DeleteIdentity(name)
+	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, "demo.clients")
 
 	tmpl, err := template.ParseFiles("add-to-openziti-response.html")
 	if err != nil {
@@ -58,8 +58,10 @@ func addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	}
 	data := struct {
 		Token string
+		Name  string
 	}{
 		Token: createdIdentity.Payload.Data.ID,
+		Name:  name,
 	}
 	err = tmpl.Execute(w, data)
 	if err != nil {

@@ -1319,9 +1319,9 @@ of Simple CSS Waves-->
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
             <h3 class="mb8">Now, let's run the sample programs!</h3>
-            <pre>go run clients/reflect.go reflectService {{ .Token }}.jwt
-go run clients/math.go httpService {{ .Token }}.jwt 1 + 2
-go run clients/curlz.go httpService {{ .Token }}.jwt</pre>
+            <pre>go run clients/reflect.go reflectService {{ .Name }}.jwt
+go run clients/math.go httpService {{ .Name }}.jwt 1 + 2
+go run clients/curlz.go httpService {{ .Name }}.jwt</pre>
           </div>
         </div>
       </div>

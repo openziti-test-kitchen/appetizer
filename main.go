@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 	manage.CreateServicePolicy("demo-client-dial", rest_model.DialBindDial, rest_model.Roles{"#demo.clients"}, rest_model.Roles{"#demo-services"})
 	manage.CreateServicePolicy("demo-server-bind", rest_model.DialBindBind, rest_model.Roles{"#demo.servers"}, rest_model.Roles{"#demo-services"})
 	_ = manage.CreateIdentity(rest_model.IdentityTypeDevice, "demo-server", "demo.servers")
+	time.Sleep(time.Second)
 	serverIdentity := manage.EnrollIdentity("demo-server")
 
 	go manage.ServeHTTP(18000)
