@@ -174,7 +174,7 @@
       border: 2px solid #006cff;
     }
 
-    button[name='action']   {
+    button[name='action'],button[name='dont']    {
       display: inline-block !important;
       padding: 0px;
       margin-top: 10px !important;
@@ -210,6 +210,17 @@
       color: white !important;
     }
 
+    button[name='dont'] {
+      -webkit-box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05) !important;
+      -moz-box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05) !important;
+      color: #434C5E;
+      background-color: #ffffff !important;
+      transition: all 0.3s ease;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+    }
+
     button[name='action']:hover {
       outline: 0 !important;
       filter: brightness(99%) !important;
@@ -218,8 +229,29 @@
       -webkit-transition: all 0.3s ease;
       -moz-transition: all 0.3s ease;
     }
+    
 
-    button[name='action']:active {
+    button[name='dont']:hover  {
+      outline: 0 !important;
+      color: #434C5E;
+      filter: brightness(99%) !important;
+      box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.05) !important;
+      transition: all 0.3s ease;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+    }
+
+    button[name='action']:active  {
+      filter: brightness(95%) !important;
+      box-shadow: none !important;
+      transform: translateY(1px) !important;
+      transition: all 0.3s ease;
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+    }
+
+    button[name='dont']:active, button[name='dont']:focus, .btn-primary:active:focus  {
+      color: #434C5E;
       filter: brightness(95%) !important;
       box-shadow: none !important;
       transform: translateY(1px) !important;
@@ -299,15 +331,11 @@
               </div>
               <div class="control-box" id="signupBox">
                 <h1>Let's Get Started</h1>
-                <h2 class="intro">
-                  Choose a name; make it unique
-                </h2>
-                <h2>For this demo, it'd be best to use an email address.</h2>
+                <h2 style="padding: 12px;">Choose a name; make it unique. For this demo, it'd be best to use an email address.</h2>
                 <form method="POST" action="/add-me-to-openziti">
                   <input type="hidden">
                   <div class="form-group">
-                    <label for="name">Name</label>
-                    <input class="form-control" type="text" id="email" name="email" placeholder="Enter a name to be known by" required>
+                    <input class="form-control" type="text" id="email" name="email" placeholder="Enter an Email Adress" required>
                   </div>
                   <div class="form-group">
                     <p style="color:red; min-height: 1rem; display: none;">{{.Error}}</p>
@@ -321,7 +349,7 @@
                   <div class="form-group">
                     <p style="color:red; min-height: 1rem; display: none;">{{.Error}}</p>
                   </div>
-                  <button class="btn btn-primary btn-block mb16" name="action" type="submit">
+                  <button class="btn btn-primary btn-block mb16" name="dont" type="submit">
                     Don't bother me with this right now...
                   </button>
                 </form>

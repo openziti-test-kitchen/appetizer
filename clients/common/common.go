@@ -22,6 +22,16 @@ func (dc *ZitiDialContext) Dial(_ context.Context, _ string, addr string) (net.C
 }
 
 func NewZitiClient(idFile string) *http.Client {
+	ctx := ContextFromFile(idFile)
+	zitiDialContext := ZitiDialContext{context: ctx}
+
+	zitiTransport := http.DefaultTransport.(*http.Transport).Clone() // copy default transport
+	zitiTransport.DialContext = zitiDialContext.Dial
+	zitiTransport.TLSClientConfig.InsecureSkipVerify = true
+	return &http.Client{Transport: zitiTransport}
+}
+
+func ContextFromFile(idFile string) ziti.Context {
 	resolvedIdFilename := idFile
 	if strings.HasSuffix(idFile, ".json") {
 		// just use it as the identity file...
@@ -45,13 +55,7 @@ func NewZitiClient(idFile string) *http.Client {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-
-	zitiDialContext := ZitiDialContext{context: ctx}
-
-	zitiTransport := http.DefaultTransport.(*http.Transport).Clone() // copy default transport
-	zitiTransport.DialContext = zitiDialContext.Dial
-	zitiTransport.TLSClientConfig.InsecureSkipVerify = true
-	return &http.Client{Transport: zitiTransport}
+	return ctx
 }
 
 func enrollHelper(jwt string, out string) {
