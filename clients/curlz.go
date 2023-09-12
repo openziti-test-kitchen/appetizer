@@ -19,6 +19,7 @@ func main() {
 		url = "http://" + url
 	}
 
+	logrus.Infof("Connecting to secure service at: '%s'", url)
 	resp, err := common.NewZitiClient(os.Args[2]).Get(url)
 	if err != nil {
 		logrus.Fatal(err)
