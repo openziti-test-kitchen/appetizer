@@ -47,17 +47,22 @@ func init() {
 	for _, ca := range caCerts {
 		caPool.AddCert(ca)
 	}
-	go authClient(zitiAdminUsername, zitiAdminPassword, caPool)
+	authClient(zitiAdminUsername, zitiAdminPassword, caPool)
+	go renewClientAuth(zitiAdminUsername, zitiAdminPassword, caPool)
 }
 
 func authClient(zitiAdminUsername string, zitiAdminPassword string, caPool *x509.CertPool) {
+	c, err := rest_util.NewEdgeManagementClientWithUpdb(zitiAdminUsername, zitiAdminPassword, CtrlAddress, caPool)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	client = c
+}
+
+func renewClientAuth(zitiAdminUsername string, zitiAdminPassword string, caPool *x509.CertPool) {
 	for range time.Tick(time.Minute * 20) {
 		//keep the client alive and logged in
-		c, err := rest_util.NewEdgeManagementClientWithUpdb(zitiAdminUsername, zitiAdminPassword, CtrlAddress, caPool)
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		client = c
+		authClient(zitiAdminUsername, zitiAdminPassword, caPool)
 	}
 }
 
