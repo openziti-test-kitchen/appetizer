@@ -47,9 +47,17 @@ func init() {
 	for _, ca := range caCerts {
 		caPool.AddCert(ca)
 	}
-	client, err = rest_util.NewEdgeManagementClientWithUpdb(zitiAdminUsername, zitiAdminPassword, CtrlAddress, caPool)
-	if err != nil {
-		logrus.Fatal(err)
+	go authClient(zitiAdminUsername, zitiAdminPassword, caPool)
+}
+
+func authClient(zitiAdminUsername string, zitiAdminPassword string, caPool *x509.CertPool) {
+	for range time.Tick(time.Minute * 20) {
+		//keep the client alive and logged in
+		c, err := rest_util.NewEdgeManagementClientWithUpdb(zitiAdminUsername, zitiAdminPassword, CtrlAddress, caPool)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		client = c
 	}
 }
 
@@ -162,7 +170,6 @@ func DeleteServicePolicy(servicePolicyName string) {
 func CreateService(serviceName string, attribute string) rest_model.CreateLocation {
 	encryptOn := true
 	serviceCreate := &rest_model.ServiceCreate{
-		//Configs:            serviceConfigs,
 		EncryptionRequired: &encryptOn,
 		Name:               &serviceName,
 		RoleAttributes:     rest_model.Roles{attribute},
