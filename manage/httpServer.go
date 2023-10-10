@@ -30,6 +30,9 @@ func StartUnderlayServer() {
 		if ca != "prod" {
 			logrus.Info("Using LetsEncryptStagingCA - not prod")
 			certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+		} else {
+			logrus.Info("Using LetsEncryptProductionCA!!! Don't abuse the rate limit")
+			certmagic.DefaultACME.CA = certmagic.LetsEncryptProductionCA
 		}
 
 		err := certmagic.HTTPS([]string{DomainName}, mux)

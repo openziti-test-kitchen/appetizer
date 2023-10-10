@@ -33,7 +33,7 @@ func main() {
 	go manage.StartUnderlayServer()
 
 	go services.ServeHTTPOverZiti(serverIdentity)
-	logrus.Println("Started an OpenZiti reflect server")
+	logrus.Println("Started a server listening on the underlay")
 
 	go services.Server(serverIdentity, "reflectService")
 	logrus.Println("Started an OpenZiti reflect server")
