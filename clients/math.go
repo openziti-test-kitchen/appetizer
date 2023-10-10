@@ -1,11 +1,11 @@
 package main
 
 import (
-	"example.com/openzitidemo/clients/common"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"
 	neturl "net/url"
+	"openziti-test-kitchen/appetizer/clients/common"
 	"os"
 	"strings"
 )

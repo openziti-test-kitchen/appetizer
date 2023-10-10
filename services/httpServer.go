@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func ServeHTTP(serverIdentity *ziti.Config) {
+func ServeHTTPOverZiti(serverIdentity *ziti.Config) {
 	listener := CreateZitiListener(serverIdentity, "httpService")
 	svr := &http.Server{}
 	mux := http.NewServeMux()

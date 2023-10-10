@@ -1,14 +1,16 @@
 package main
 
 import (
-	"example.com/openzitidemo/manage"
-	"example.com/openzitidemo/services"
-	"github.com/openziti/edge-api/rest_model"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/openziti/edge-api/rest_model"
+	"github.com/sirupsen/logrus"
+
+	"openziti-test-kitchen/appetizer/manage"
+	"openziti-test-kitchen/appetizer/services"
 )
 
 func main() {
@@ -28,9 +30,9 @@ func main() {
 	time.Sleep(time.Second)
 	serverIdentity := manage.EnrollIdentity("demo-server")
 
-	go manage.ServeHTTP(18000)
+	go manage.StartUnderlayServer()
 
-	go services.ServeHTTP(serverIdentity)
+	go services.ServeHTTPOverZiti(serverIdentity)
 	logrus.Println("Started an OpenZiti reflect server")
 
 	go services.Server(serverIdentity, "reflectService")

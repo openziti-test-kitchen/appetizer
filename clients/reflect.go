@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"example.com/openzitidemo/clients/common"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"openziti-test-kitchen/appetizer/clients/common"
 	"os"
 )
 

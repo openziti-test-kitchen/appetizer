@@ -1,7 +1,8 @@
 package main
 
 import (
-	"example.com/openzitidemo/clients/common"
+	"openziti-test-kitchen/appetizer/clients/common"
+
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"

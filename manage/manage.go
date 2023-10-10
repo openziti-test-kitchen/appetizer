@@ -18,6 +18,7 @@ import (
 )
 
 var CtrlAddress string
+var DomainName string //if set, will try to use LetsEncrypt to self-bootstrap TLS. __MUST__ listen on 443 if set
 
 var client *rest_management_api_client.ZitiEdgeManagement
 
@@ -25,6 +26,7 @@ func init() {
 	zitiAdminUsername := os.Getenv("OPENZITI_USER")
 	zitiAdminPassword := os.Getenv("OPENZITI_PWD")
 	CtrlAddress = os.Getenv("OPENZITI_CTRL")
+	DomainName = os.Getenv("OPENZITI_DOMAIN")
 
 	if zitiAdminUsername == "" || zitiAdminPassword == "" || CtrlAddress == "" {
 		if zitiAdminUsername == "" {
@@ -37,6 +39,10 @@ func init() {
 			logrus.Error("Please set the environment variable: OPENZITI_CTRL")
 		}
 		logrus.Fatal("Cannot continue until these variables are set")
+	}
+
+	if DomainName != "" {
+		logrus.Info("Domain name is not empty. Server will try to bootstrap TLS for domain [%s] on port 443 (required 443)", DomainName)
 	}
 
 	caCerts, err := rest_util.GetControllerWellKnownCas(CtrlAddress)

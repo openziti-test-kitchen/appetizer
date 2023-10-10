@@ -3,25 +3,54 @@ package manage
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/caddyserver/certmagic"
 	"github.com/openziti/edge-api/rest_model"
 	"github.com/sirupsen/logrus"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
 	"text/template"
 )
 
-func ServeHTTP(port int) {
-	listener := CreateUnderlayListener(port)
-	svr := &http.Server{}
+func StartUnderlayServer() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(serveIndexHTML))
 	mux.Handle("/overview.png", http.HandlerFunc(serveOverview))
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(addToOpenZiti))
 	mux.Handle("/download-token", http.HandlerFunc(downloadToken))
-	svr.Handler = mux
-	if err := svr.Serve(listener); err != nil {
-		logrus.Fatal(err)
+
+	var svr *http.Server
+	if DomainName != "" {
+		err := certmagic.HTTPS([]string{DomainName}, mux)
+		if err != nil {
+			log.Fatalf("Failed to create https: %v", err)
+		}
+		ln, err := certmagic.Listen([]string{DomainName})
+		if err != nil {
+			log.Fatalf("Failed to create listener: %v", err)
+		}
+		tlsConfig, err := certmagic.TLS([]string{DomainName})
+		if err != nil {
+			log.Fatalf("Failed to create TLS: %v", err)
+		}
+		svr = &http.Server{
+			TLSConfig: tlsConfig,
+		}
+		svr.Handler = mux
+		if err := svr.ServeTLS(ln, "", ""); err != nil {
+			logrus.Fatal(err)
+		}
+	} else {
+		svr = &http.Server{}
+		svr.Handler = mux
+		ln, err := net.Listen("tcp", fmt.Sprintf(":%d", 18000))
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		if err := svr.Serve(ln); err != nil {
+			logrus.Fatal(err)
+		}
 	}
 }
 
@@ -113,13 +142,4 @@ func generateRandomID(length int) (string, error) {
 
 	// Trim the string to the desired length
 	return randomID[:length], nil
-}
-
-func CreateUnderlayListener(port int) net.Listener {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	logrus.Printf("Started an insecure server on %d\n", port)
-	return ln
 }
