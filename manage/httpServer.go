@@ -6,8 +6,6 @@ import (
 	"github.com/caddyserver/certmagic"
 	"github.com/openziti/edge-api/rest_model"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"log"
 	"math/rand"
 	"net"
@@ -25,14 +23,14 @@ func StartUnderlayServer() {
 
 	var svr *http.Server
 	if DomainName != "" {
-		config := zap.NewProductionConfig()
-		config.Level.SetLevel(zapcore.DebugLevel)
-		logger, _ := config.Build()
-		certmagic.Default.Logger = logger
 		certmagic.DefaultACME.Agreed = true
 		email := os.Getenv("OPENZITI_ACME_EMAIL")
 		certmagic.DefaultACME.Email = email
-		certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+		ca := os.Getenv("OPENZITI_CA")
+		if ca != "prod" {
+			logrus.Info("Using LetsEncryptStagingCA - not prod")
+			certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+		}
 
 		err := certmagic.HTTPS([]string{DomainName}, mux)
 		if err != nil {
