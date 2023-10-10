@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/appetizer .
+#use to build with no deps: CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/appetizer .
 
 if [ "local" == "${1}" ]; then
   echo "LOADING LOCALLY instead of pushing to dockerhub"
