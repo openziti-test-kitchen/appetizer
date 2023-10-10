@@ -42,7 +42,7 @@ func init() {
 	}
 
 	if DomainName != "" {
-		logrus.Info("Domain name is not empty. Server will try to bootstrap TLS for domain [%s] on port 443 (required 443)", DomainName)
+		logrus.Infof("Domain name is not empty. Server will try to bootstrap TLS for domain [%s] on port 443 (required 443)", DomainName)
 	}
 
 	caCerts, err := rest_util.GetControllerWellKnownCas(CtrlAddress)

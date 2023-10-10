@@ -6,6 +6,8 @@ import (
 	"github.com/caddyserver/certmagic"
 	"github.com/openziti/edge-api/rest_model"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"math/rand"
 	"net"
@@ -22,6 +24,11 @@ func StartUnderlayServer() {
 
 	var svr *http.Server
 	if DomainName != "" {
+		config := zap.NewProductionConfig()
+		config.Level.SetLevel(zapcore.DebugLevel)
+		logger, _ := config.Build()
+		certmagic.Default.Logger = logger
+
 		err := certmagic.HTTPS([]string{DomainName}, mux)
 		if err != nil {
 			log.Fatalf("Failed to create https: %v", err)
