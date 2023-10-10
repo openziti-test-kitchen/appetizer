@@ -28,6 +28,8 @@ func StartUnderlayServer() {
 		config.Level.SetLevel(zapcore.DebugLevel)
 		logger, _ := config.Build()
 		certmagic.Default.Logger = logger
+		certmagic.DefaultACME.Agreed = true
+		certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
 
 		err := certmagic.HTTPS([]string{DomainName}, mux)
 		if err != nil {
