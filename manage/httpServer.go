@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"text/template"
 )
 
@@ -29,6 +30,8 @@ func StartUnderlayServer() {
 		logger, _ := config.Build()
 		certmagic.Default.Logger = logger
 		certmagic.DefaultACME.Agreed = true
+		email := os.Getenv("OPENZITI_ACME_EMAIL")
+		certmagic.DefaultACME.Email = email
 		certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
 
 		err := certmagic.HTTPS([]string{DomainName}, mux)
