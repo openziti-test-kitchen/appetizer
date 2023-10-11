@@ -40,6 +40,7 @@ func main() {
 			time.Sleep(3 * time.Second)
 			i++
 			topic.Notify(fmt.Sprintf("id: %d\n", i))
+			topic.Notify(fmt.Sprintf("event: event_%d\n", i))
 			topic.Notify(fmt.Sprintf("data: here we go: %d\n", i))
 		}
 	}()
