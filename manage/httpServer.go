@@ -186,7 +186,7 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-te.Messages: //<-time.After(1 * time.Second):
-			_, _ = fmt.Fprintf(w, "data: %s", msg)
+			_, _ = fmt.Fprintf(w, "%s", msg)
 			w.(http.Flusher).Flush() // Flush the response to the client
 		case <-r.Context().Done():
 			u.topic.RemoveReceiver(te)
