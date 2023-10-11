@@ -3,6 +3,7 @@ module openziti-test-kitchen/appetizer
 go 1.20
 
 require (
+	github.com/TwiN/go-away v1.6.11
 	github.com/caddyserver/certmagic v0.19.2
 	github.com/openziti/edge-api v0.25.33
 	github.com/openziti/sdk-golang v0.20.99

@@ -3,6 +3,7 @@ package services
 import (
 	"bufio"
 	"fmt"
+	goaway "github.com/TwiN/go-away"
 	"github.com/openziti/sdk-golang/ziti/edge"
 	"openziti-test-kitchen/appetizer/manage"
 	"os"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/openziti/sdk-golang/ziti"
 	"github.com/sirupsen/logrus"
+
+	_ "github.com/TwiN/go-away"
 )
 
 type ReflectServer struct {
@@ -66,7 +69,11 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 		logrus.Info("about to read a string :")
 		logrus.Infof("                  read : %s", strings.TrimSpace(line))
 		r.topic.Notify(fmt.Sprintf("event: notify\n"))
-		r.topic.Notify(fmt.Sprintf("data: %s sent : %s\n\n", conn.SourceIdentifier(), line))
+		if goaway.IsProfane(line) {
+			r.topic.Notify(fmt.Sprintf("data: %s sent : %s\n\n", conn.SourceIdentifier(), "something naughty... shame on you."))
+		} else {
+			r.topic.Notify(fmt.Sprintf("data: %s sent : %s\n\n", conn.SourceIdentifier(), line))
+		}
 		i++
 		resp := fmt.Sprintf("you sent me: %s", line)
 		_, _ = rw.WriteString(resp)
