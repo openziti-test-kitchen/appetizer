@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,15 +33,15 @@ func main() {
 	topic := manage.Topic[string]{}
 	topic.Start()
 
-	go func() {
-		i := 0
-		for {
-			time.Sleep(3 * time.Second)
-			i++
-			topic.Notify("event: notify\n")
-			topic.Notify(fmt.Sprintf("data: here we go: %d\n\n", i))
-		}
-	}()
+	//go func() {
+	//	i := 0
+	//	for {
+	//		time.Sleep(250 * time.Millisecond)
+	//		i++
+	//		topic.Notify("event: notify\n")
+	//		topic.Notify(fmt.Sprintf("data: here we go: %d\n\n", i))
+	//	}
+	//}()
 
 	go manage.StartUnderlayServer(topic)
 

@@ -3,7 +3,7 @@ package services
 import (
 	"bufio"
 	"fmt"
-	"net"
+	"github.com/openziti/sdk-golang/ziti/edge"
 	"openziti-test-kitchen/appetizer/manage"
 	"os"
 	"strings"
@@ -38,16 +38,16 @@ func StartReflectServer(zitiCfg *ziti.Config, serviceName string, topic manage.T
 	logrus.Infof("received %s: shutting down...", s)
 }
 
-func (r *ReflectServer) serve(listener net.Listener) {
+func (r *ReflectServer) serve(listener edge.Listener) {
 	logrus.Infof("ready to accept connections")
 	for {
-		conn, _ := listener.Accept()
+		conn, _ := listener.AcceptEdge()
 		logrus.Infof("new connection accepted")
 		go r.accept(conn)
 	}
 }
 
-func (r *ReflectServer) accept(conn net.Conn) {
+func (r *ReflectServer) accept(conn edge.Conn) {
 	if conn == nil {
 		logrus.Fatal("connection is nil!")
 	}
@@ -65,8 +65,8 @@ func (r *ReflectServer) accept(conn net.Conn) {
 		}
 		logrus.Info("about to read a string :")
 		logrus.Infof("                  read : %s", strings.TrimSpace(line))
-		r.topic.Notify(fmt.Sprintf("event: %s\n", line))
-		r.topic.Notify(fmt.Sprintf("data: here we go: %d\n\n", i))
+		r.topic.Notify(fmt.Sprintf("event: notify\n"))
+		r.topic.Notify(fmt.Sprintf("data: %s sent : %s\n\n", conn.SourceIdentifier(), line))
 		i++
 		resp := fmt.Sprintf("you sent me: %s", line)
 		_, _ = rw.WriteString(resp)
