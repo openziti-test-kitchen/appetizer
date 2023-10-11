@@ -30,12 +30,14 @@ func main() {
 	time.Sleep(time.Second)
 	serverIdentity := manage.EnrollIdentity("demo-server")
 
-	go manage.StartUnderlayServer()
+	topic := manage.Topic[string]{}
+	topic.Start()
+	go manage.StartUnderlayServer(topic)
 
 	go services.ServeHTTPOverZiti(serverIdentity)
 	logrus.Println("Started a server listening on the underlay")
 
-	go services.Server(serverIdentity, "reflectService")
+	go services.StartReflectServer(serverIdentity, "reflectService", topic)
 	logrus.Println("Started an OpenZiti reflect server")
 
 	logrus.Println("Servers running. Waiting for interrupt")

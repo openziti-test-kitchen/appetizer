@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"openziti-test-kitchen/appetizer/manage"
 	"os"
 	"strings"
 
@@ -11,9 +12,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Server(zitiCfg *ziti.Config, serviceName string) {
-	ctx, err := ziti.NewContext(zitiCfg)
+type ReflectServer struct {
+	topic manage.Topic[string]
+}
 
+func StartReflectServer(zitiCfg *ziti.Config, serviceName string, topic manage.Topic[string]) {
+	ctx, err := ziti.NewContext(zitiCfg)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -22,29 +26,35 @@ func Server(zitiCfg *ziti.Config, serviceName string) {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	serve(listener)
+
+	r := &ReflectServer{
+		topic: topic,
+	}
+
+	r.serve(listener)
 
 	sig := make(chan os.Signal)
 	s := <-sig
 	logrus.Infof("received %s: shutting down...", s)
 }
 
-func serve(listener net.Listener) {
+func (r *ReflectServer) serve(listener net.Listener) {
 	logrus.Infof("ready to accept connections")
 	for {
 		conn, _ := listener.Accept()
 		logrus.Infof("new connection accepted")
-		go accept(conn)
+		go r.accept(conn)
 	}
 }
 
-func accept(conn net.Conn) {
+func (r *ReflectServer) accept(conn net.Conn) {
 	if conn == nil {
 		logrus.Fatal("connection is nil!")
 	}
 	writer := bufio.NewWriter(conn)
 	reader := bufio.NewReader(conn)
 	rw := bufio.NewReadWriter(reader, writer)
+
 	//line delimited
 	for {
 		line, err := rw.ReadString('\n')
@@ -54,6 +64,7 @@ func accept(conn net.Conn) {
 		}
 		logrus.Info("about to read a string :")
 		logrus.Infof("                  read : %s", strings.TrimSpace(line))
+		r.topic.Notify(line)
 		resp := fmt.Sprintf("you sent me: %s", line)
 		_, _ = rw.WriteString(resp)
 		_ = rw.Flush()

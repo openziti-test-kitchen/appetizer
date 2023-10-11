@@ -14,12 +14,24 @@ import (
 	"text/template"
 )
 
-func StartUnderlayServer() {
+type UnderlayServer struct {
+	topic Topic[string]
+}
+
+func StartUnderlayServer(topic Topic[string]) {
+	u := UnderlayServer{
+		topic: topic,
+	}
+	u.Start()
+}
+
+func (u UnderlayServer) Start() {
 	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(serveIndexHTML))
-	mux.Handle("/overview.png", http.HandlerFunc(serveOverview))
-	mux.Handle("/add-me-to-openziti", http.HandlerFunc(addToOpenZiti))
-	mux.Handle("/download-token", http.HandlerFunc(downloadToken))
+	mux.Handle("/", http.HandlerFunc(u.serveIndexHTML))
+	mux.Handle("/overview.png", http.HandlerFunc(u.serveOverview))
+	mux.Handle("/add-me-to-openziti", http.HandlerFunc(u.addToOpenZiti))
+	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
+	mux.Handle("/sse", http.HandlerFunc(u.sse))
 
 	var svr *http.Server
 	if DomainName != "" {
@@ -67,14 +79,14 @@ func StartUnderlayServer() {
 	}
 }
 
-func serveIndexHTML(w http.ResponseWriter, r *http.Request) {
+func (u UnderlayServer) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./index.html")
 }
-func serveOverview(w http.ResponseWriter, r *http.Request) {
+func (u UnderlayServer) serveOverview(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./overview.png")
 }
 
-func addToOpenZiti(w http.ResponseWriter, r *http.Request) {
+func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	var name string
 	if r.URL.Query().Get("randomizer") != "" {
 		randomId, _ := generateRandomID(8)
@@ -116,7 +128,7 @@ func addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func downloadToken(w http.ResponseWriter, r *http.Request) {
+func (u UnderlayServer) downloadToken(w http.ResponseWriter, r *http.Request) {
 	t := r.URL.Query().Get("token")
 	if t == "" {
 		http.Error(w, "Token not available", http.StatusBadRequest)
@@ -137,7 +149,7 @@ func downloadToken(w http.ResponseWriter, r *http.Request) {
 
 func generateRandomID(length int) (string, error) {
 	if length <= 0 {
-		return "", fmt.Errorf("Length must be greater than zero")
+		return "", fmt.Errorf("length must be greater than zero")
 	}
 
 	// Determine how many random bytes we need
@@ -155,4 +167,33 @@ func generateRandomID(length int) (string, error) {
 
 	// Trim the string to the desired length
 	return randomID[:length], nil
+}
+
+var clients = make(map[string]http.ResponseWriter)
+
+func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	secretKey := r.URL.Query().Get("secretKey")
+
+	// Store the client's response writer for sending messages
+	clients[secretKey] = w
+	id, _ := generateRandomID(10)
+	te := u.topic.NewEntry(id)
+
+	for {
+		select {
+		case msg := <-te.Messages: //<-time.After(1 * time.Second):
+			_, _ = fmt.Fprintf(w, "%s\n", msg)
+			w.(http.Flusher).Flush() // Flush the response to the client
+		case <-r.Context().Done():
+			u.topic.RemoveReceiver(te)
+			delete(clients, secretKey)
+			fmt.Println("Client closed connection.")
+			return
+		}
+	}
 }
