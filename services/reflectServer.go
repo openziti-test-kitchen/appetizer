@@ -55,6 +55,7 @@ func (r *ReflectServer) accept(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	rw := bufio.NewReadWriter(reader, writer)
 
+	i := 0
 	//line delimited
 	for {
 		line, err := rw.ReadString('\n')
@@ -64,7 +65,9 @@ func (r *ReflectServer) accept(conn net.Conn) {
 		}
 		logrus.Info("about to read a string :")
 		logrus.Infof("                  read : %s", strings.TrimSpace(line))
-		r.topic.Notify(line)
+		r.topic.Notify(fmt.Sprintf("event: %s\n", line))
+		r.topic.Notify(fmt.Sprintf("data: here we go: %d\n\n", i))
+		i++
 		resp := fmt.Sprintf("you sent me: %s", line)
 		_, _ = rw.WriteString(resp)
 		_ = rw.Flush()
