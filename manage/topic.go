@@ -55,7 +55,7 @@ func (t *Topic[T]) processActions() {
 		case REMOVE:
 			logrus.Debug("removing entry: %s", action.entry.Id())
 			t.removeEntry(action.entry)
-			logrus.Info("removed entry: %s. size now: %d", action.entry.Id(), len(t.entries))
+			logrus.Infof("removed entry: %s. size now: %d", action.entry.Id(), len(t.entries))
 			break
 		case NOTIFY:
 			for _, n := range t.entries {

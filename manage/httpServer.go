@@ -32,6 +32,7 @@ func (u UnderlayServer) Start() {
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(u.addToOpenZiti))
 	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
+	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
 
 	var svr *http.Server
 	if DomainName != "" {
@@ -84,6 +85,9 @@ func (u UnderlayServer) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 }
 func (u UnderlayServer) serveOverview(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./overview.png")
+}
+func (u UnderlayServer) messagesHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./messages.html")
 }
 
 func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +191,7 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-te.Messages: //<-time.After(1 * time.Second):
-			_, _ = fmt.Fprintf(w, "%s\n", msg)
+			_, _ = fmt.Fprintf(w, "%s\n\n", msg)
 			w.(http.Flusher).Flush() // Flush the response to the client
 		case <-r.Context().Done():
 			u.topic.RemoveReceiver(te)
