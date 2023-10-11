@@ -173,29 +173,23 @@ func generateRandomID(length int) (string, error) {
 	return randomID[:length], nil
 }
 
-var clients = make(map[string]http.ResponseWriter)
-
 func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	secretKey := r.URL.Query().Get("secretKey")
-
-	// Store the client's response writer for sending messages
-	clients[secretKey] = w
 	id, _ := generateRandomID(10)
 	te := u.topic.NewEntry(id)
 
 	for {
 		select {
 		case msg := <-te.Messages: //<-time.After(1 * time.Second):
-			_, _ = fmt.Fprintf(w, "%s\n\n", msg)
+			_, _ = fmt.Fprintf(w, "data: %s", msg)
 			w.(http.Flusher).Flush() // Flush the response to the client
 		case <-r.Context().Done():
 			u.topic.RemoveReceiver(te)
-			delete(clients, secretKey)
 			fmt.Println("Client closed connection.")
 			return
 		}

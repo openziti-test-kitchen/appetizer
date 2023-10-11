@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,6 +33,16 @@ func main() {
 
 	topic := manage.Topic[string]{}
 	topic.Start()
+
+	go func() {
+		i := 0
+		for {
+			time.Sleep(3 * time.Second)
+			i++
+			topic.Notify(fmt.Sprintf("here we go: %d", i))
+		}
+	}()
+
 	go manage.StartUnderlayServer(topic)
 
 	go services.ServeHTTPOverZiti(serverIdentity)
