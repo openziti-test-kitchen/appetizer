@@ -48,14 +48,14 @@ func (t *Topic[T]) processActions() {
 		action := <-t.actions
 		switch action.action {
 		case ADD:
-			logrus.Info("adding entry: %s", action.entry.Id())
+			logrus.Debug("adding entry: %s", action.entry.Id())
 			t.entries = append(t.entries, action.entry)
-			logrus.Info(" added entry: %s", action.entry.Id())
+			logrus.Info("added entry: %s", action.entry.Id())
 			break
 		case REMOVE:
-			logrus.Info("removing entry: %s", action.entry.Id())
+			logrus.Debug("removing entry: %s", action.entry.Id())
 			t.removeEntry(action.entry)
-			logrus.Info(" removed entry: %s. size now: %d", action.entry.Id(), len(t.entries))
+			logrus.Info("removed entry: %s. size now: %d", action.entry.Id(), len(t.entries))
 			break
 		case NOTIFY:
 			for _, n := range t.entries {
