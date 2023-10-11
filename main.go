@@ -39,7 +39,7 @@ func main() {
 		for {
 			time.Sleep(3 * time.Second)
 			i++
-			topic.Notify(fmt.Sprintf("here we go: %d", i))
+			topic.Notify(fmt.Sprintf("here we go: %d\n", i))
 		}
 	}()
 
