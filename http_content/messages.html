@@ -19,9 +19,13 @@
 <script>
     let bubs = document.getElementById("bubs");
     function clickit() {
+        addItem("clint", "hi")
+    }
+
+    function addItem(who, what) {
         let d = document.createElement("div");
         d.className = "chat";
-        d.innerHTML = "<p className=\"name\">randomizer_sRH9uVTp sent</p><p className=\"comment\">Hello World</p>";
+        d.innerHTML = "<p className=\"name\">" + who + " sent</p><p className=\"comment\">" + what + "</p>";
         bubs.append(d);
         setTimeout(fadeOutElement, 15000, d, 1000);
     }
@@ -91,7 +95,19 @@
 
     function notifyHandler(event) {
         console.log("notifyHandler")
+        const parts = event.data.split(':');
+        const who = parts[0];
+        const what = parts.slice(1).join(':');
+
+        console.log(who); // Output: "aaa"
+        console.log(what); // Output: "bbb:cccc"
+        let d = document.createElement("div");
+        d.className = "chat";
+        d.innerHTML = "<p className=\"name\">" + who + "</p><p className=\"comment\">" + what + "</p>";
+        bubs.append(d);
         addMessage(event.data);
+        setTimeout(fadeOutElement, 15000, d, 1000);
+
         renderMessages();
     }
 
