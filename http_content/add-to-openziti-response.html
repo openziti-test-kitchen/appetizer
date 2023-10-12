@@ -1321,10 +1321,10 @@
           <div class="col-md-8 col-md-offset-2 col-sm-12">
             <h3 class="mb8">Now, run the sample programs!</h3>
             <p style="text-align: left">Reflect Example:</p>
-            <pre>go run clients/reflect/reflect.go {{ .ReflectSvc }} {{ .Name }}.jwt</pre>
+            <pre>go run clients/reflect.go {{ .ReflectSvc }} {{ .Name }}.jwt</pre>
             <p style="text-align: left">HTTP Examples:</p>
-            <pre>go run clients/math/math.go   {{ .HttpSvc }} {{ .Name }}.jwt    1 + 2
-go run clients/curlz/curlz.go {{ .HttpSvc }} {{ .Name }}.jwt</pre>
+            <pre>go run clients/math.go   {{ .HttpSvc }} {{ .Name }}.jwt    1 + 2
+go run clients/curlz.go {{ .HttpSvc }} {{ .Name }}.jwt</pre>
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
             <img src="overview.png" style="background: #f5f5f5; width: 97%;padding: 10px;border-radius: 10px;">

@@ -68,6 +68,17 @@ func (u UnderlayServer) Start() {
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
+
+	// Get the current working directory
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	// Print the working directory
+	fmt.Println("Current Working Directory:", wd)
+
 	var svr *http.Server
 	if DomainName != "" {
 		certmagic.DefaultACME.Agreed = true
