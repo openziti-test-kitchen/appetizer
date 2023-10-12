@@ -14,6 +14,14 @@ import (
 )
 
 func main() {
+	manage.DemoInstanceName = os.Getenv("OPENZITI_DEMO_INSTANCE")
+
+	if manage.DemoInstanceName == "" {
+		hostname, _ := os.Hostname()
+		manage.DemoInstanceName = hostname
+		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+	}
+
 	logrus.Println("Removing demo configuration from " + manage.CtrlAddress)
 	manage.DeleteIdentity("demo-server")
 	manage.DeleteServicePolicy("demo-server-bind")
@@ -32,16 +40,6 @@ func main() {
 
 	topic := manage.Topic[string]{}
 	topic.Start()
-
-	//go func() {
-	//	i := 0
-	//	for {
-	//		time.Sleep(250 * time.Millisecond)
-	//		i++
-	//		topic.Notify("event: notify\n")
-	//		topic.Notify(fmt.Sprintf("data: here we go: %d\n\n", i))
-	//	}
-	//}()
 
 	go manage.StartUnderlayServer(topic)
 

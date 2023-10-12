@@ -105,10 +105,13 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		name = r.Form.Get("name")
 		logrus.Printf("Received name: %s", name)
 	}
+
 	if name == "" {
 		http.Error(w, "Invalid input. name form field not provided", http.StatusBadRequest)
 		return
 	}
+
+	name = DemoInstanceName + name //add the instance prefix...
 
 	DeleteIdentity(name)
 	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, "demo.clients")

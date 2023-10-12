@@ -18,7 +18,8 @@ import (
 )
 
 var CtrlAddress string
-var DomainName string //if set, will try to use LetsEncrypt to self-bootstrap TLS. __MUST__ listen on 443 if set
+var DomainName string       //if set, will try to use LetsEncrypt to self-bootstrap TLS. __MUST__ listen on 443 if set
+var DemoInstanceName string //a prefix to use for all objects created by this demo
 
 var client *rest_management_api_client.ZitiEdgeManagement
 
