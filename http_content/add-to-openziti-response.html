@@ -262,6 +262,12 @@
       }
     }
 
+    @media (min-width: 1400px) {
+      .container {
+        width: 1350px;
+      }
+    }
+
     .container-fluid {
       padding-right: 15px;
       padding-left: 15px;
@@ -1319,11 +1325,12 @@
               services hosted by this server, protected using OpenZiti's application-embedded zero trust design</p>
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
-            <h3 class="mb8">Now, run the sample programs!</h3>
+            <h3 class="mb8">Now, run one of the sample programs!</h3>
             <p style="text-align: left">Reflect Example:</p>
             <pre>go run clients/reflect.go {{ .ReflectSvc }} {{ .Name }}.jwt</pre>
             <p style="text-align: left">HTTP Examples:</p>
-            <pre>go run clients/math.go   {{ .HttpSvc }} {{ .Name }}.jwt    1 + 2
+            <pre>go run clients/math.go  {{ .HttpSvc }} {{ .Name }}.jwt  1 + 2
+-- or --
 go run clients/curlz.go {{ .HttpSvc }} {{ .Name }}.jwt</pre>
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
