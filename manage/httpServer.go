@@ -114,7 +114,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	name = DemoInstanceName + name //add the instance prefix...
 
 	DeleteIdentity(name)
-	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, "demo.clients")
+	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, DemoInstanceName+"_demo.clients")
 
 	tmpl, err := template.ParseFiles("http_content/add-to-openziti-response.html")
 	if err != nil {
@@ -122,11 +122,13 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := struct {
-		Token string
-		Name  string
+		Token    string
+		Name     string
+		Instance string
 	}{
-		Token: createdIdentity.Payload.Data.ID,
-		Name:  name,
+		Token:    createdIdentity.Payload.Data.ID,
+		Name:     name,
+		Instance: DemoInstanceName,
 	}
 	err = tmpl.Execute(w, data)
 	if err != nil {

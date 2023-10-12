@@ -23,30 +23,38 @@ func main() {
 	}
 
 	logrus.Println("Removing demo configuration from " + manage.CtrlAddress)
-	manage.DeleteIdentity("demo-server")
-	manage.DeleteServicePolicy("demo-server-bind")
-	manage.DeleteServicePolicy("demo-client-dial")
-	manage.DeleteService("reflectService")
-	manage.DeleteService("httpService")
+	svrId := manage.DemoInstanceName + "_demo-server"
+	reflectSvcName := manage.DemoInstanceName + "_reflectService"
+	svcAttrName := manage.DemoInstanceName + "_demo-services"
+	httpSvcName := manage.DemoInstanceName + "_httpService"
+	bindSp := manage.DemoInstanceName + "_demo-server-bind"
+	bindSpRole := manage.DemoInstanceName + "_demo.servers"
+	dialSp := manage.DemoInstanceName + "_demo-server-dial"
+	dialSpRole := manage.DemoInstanceName + "_demo.clients"
+	manage.DeleteIdentity(svrId)
+	manage.DeleteServicePolicy(bindSp)
+	manage.DeleteServicePolicy(dialSp)
+	manage.DeleteService(reflectSvcName)
+	manage.DeleteService(httpSvcName)
 
 	logrus.Println("Adding demo configuration to " + manage.CtrlAddress)
-	manage.CreateService("reflectService", "demo-services")
-	manage.CreateService("httpService", "demo-services")
-	manage.CreateServicePolicy("demo-client-dial", rest_model.DialBindDial, rest_model.Roles{"#demo.clients"}, rest_model.Roles{"#demo-services"})
-	manage.CreateServicePolicy("demo-server-bind", rest_model.DialBindBind, rest_model.Roles{"#demo.servers"}, rest_model.Roles{"#demo-services"})
-	_ = manage.CreateIdentity(rest_model.IdentityTypeDevice, "demo-server", "demo.servers")
+	manage.CreateService(reflectSvcName, svcAttrName)
+	manage.CreateService(httpSvcName, svcAttrName)
+	manage.CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
+	manage.CreateServicePolicy(bindSp, rest_model.DialBindBind, rest_model.Roles{"#" + bindSpRole}, rest_model.Roles{"#" + svcAttrName})
+	_ = manage.CreateIdentity(rest_model.IdentityTypeDevice, svrId, bindSpRole)
 	time.Sleep(time.Second)
-	serverIdentity := manage.EnrollIdentity("demo-server")
+	serverIdentity := manage.EnrollIdentity(svrId)
 
 	topic := manage.Topic[string]{}
 	topic.Start()
 
 	go manage.StartUnderlayServer(topic)
 
-	go services.ServeHTTPOverZiti(serverIdentity)
+	go services.ServeHTTPOverZiti(serverIdentity, httpSvcName)
 	logrus.Println("Started a server listening on the underlay")
 
-	go services.StartReflectServer(serverIdentity, "reflectService", topic)
+	go services.StartReflectServer(serverIdentity, reflectSvcName, topic)
 	logrus.Println("Started an OpenZiti reflect server")
 
 	logrus.Println("Servers running. Waiting for interrupt")
