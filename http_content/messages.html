@@ -10,105 +10,44 @@
 <body>
 <div class="page-wrapper bg-img-1">
     <h1>Realtime "Reflect" Messages</h1>
-    <button onclick="clickit()">click it</button>
     <div class="messagebox">
+        <div class="innerMsgBox">
         <div id="bubs" class="chat-bubbles">
+
+        </div>
         </div>
     </div>
 </div>
 <script>
-    let bubs = document.getElementById("bubs");
-    function clickit() {
-        addItem("clint", "hi")
-    }
-
-    function addItem(who, what) {
-        let d = document.createElement("div");
-        d.className = "chat";
-        d.innerHTML = "<p className=\"name\">" + who + " sent</p><p className=\"comment\">" + what + "</p>";
-        bubs.append(d);
-        setTimeout(fadeOutElement, 15000, d, 1000);
-    }
 
     function fadeOutElement(element, duration) {
         var opacity = 1;
-        //var height = element.clientHeight;
-        var interval = 5; // Time interval in milliseconds
+        var interval = 5;
         var step = (interval / duration);
 
         var fadeOut = setInterval(function() {
-            if (opacity <= 0.05 /*|| height <= 0*/) {
+            if (opacity <= 0.05) {
                 clearInterval(fadeOut);
-                element.style.display = 'none'; // Hide the element after fading out
+                element.style.display = 'none';
             } else {
                 opacity -= step;
-                //height -= step * element.clientHeight; // Adjust the height
                 element.style.opacity = opacity;
-                //element.style.height = height + 'px';
             }
         }, interval);
-    }
-    function shrinkElement(element, duration) {
-        var height = element.clientHeight;
-        var interval = 5; // Time interval in milliseconds
-        var step = (interval / duration);
-
-        var fadeOut = setInterval(function() {
-            if (height <= 0) {
-                clearInterval(fadeOut);
-                element.style.display = 'none'; // Hide the element after fading out
-            } else {
-                height -= step * element.clientHeight; // Adjust the height
-                element.style.height = height + 'px';
-            }
-        }, interval);
-    }
-
-    const arraySize = 20;
-    const myArray = new Array(arraySize);
-    let idx = 0;
-    function addMessage(msg) {
-        console.log("addMessage: " + msg)
-        if(idx >= arraySize) {
-            idx = 0;
-        }
-        myArray[idx] = msg;
-        idx ++;
-    }
-
-    function renderMessages() {
-        document.getElementById("result").innerHTML = "";
-        for (let i = idx; i < arraySize; i++) {
-            renderMessage(myArray[i]);
-        }
-
-        for (let i = 0; i < idx; i++) {
-            renderMessage(myArray[i]);
-        }
-    }
-
-    function renderMessage(msg) {
-        if(msg) {
-            document.getElementById("result").innerHTML += msg + "<br>";
-        }
     }
 
     function notifyHandler(event) {
-        console.log("notifyHandler")
         const parts = event.data.split(':');
         const who = parts[0];
         const what = parts.slice(1).join(':');
 
-        console.log(who); // Output: "aaa"
-        console.log(what); // Output: "bbb:cccc"
         let d = document.createElement("div");
         d.className = "chat";
         d.innerHTML = "<p className=\"name\">" + who + "</p><p className=\"comment\">" + what + "</p>";
-        bubs.append(d);
-        addMessage(event.data);
-        setTimeout(fadeOutElement, 15000, d, 1000);
 
-        renderMessages();
+        let bubs = document.getElementById("bubs");
+        bubs.append(d);
+        //setTimeout(fadeOutElement, 15000, d, 1000);
     }
 
     if(typeof(EventSource) !== "undefined") {

@@ -73,7 +73,7 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 		if goaway.IsProfane(line) {
 			resp += "... but please remember to be kind and keep it clean"
 		}
-		r.topic.Notify(fmt.Sprintf("data: %s sent : %s\n\n", conn.SourceIdentifier(), line))
+		r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), line))
 		i++
 		_, _ = rw.WriteString(resp)
 		_ = rw.Flush()
