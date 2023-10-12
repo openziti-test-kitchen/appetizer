@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Awesomesauce!</title>
+  <link rel="stylesheet" href="./reflectMessages.css">
+  <script src="chat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
 
@@ -1268,10 +1270,6 @@
 </head>
 
 <body>
-  <!-- partial:index.partial.html -->
-  <!--Hey! This is the original version
-of Simple CSS Waves-->
-
   <div class="header">
 
     <!--Content before waves-->
@@ -1357,6 +1355,16 @@ go run clients/curlz/curlz.go httpService {{ .Name }}.jwt</pre>
   <!--Content ends-->
   <!-- partial -->
 
+  <div class="page-wrapper bg-img-1">
+    <span style="color: whitesmoke; font-weight: bold;">Realtime "Reflect" Messages</span>
+    <div class="messagebox">
+      <div class="innerMsgBox">
+        <div id="bubs" class="chat-bubbles">
+
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>

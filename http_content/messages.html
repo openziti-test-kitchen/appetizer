@@ -6,10 +6,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
+    <script src="chat.js"></script>
 </head>
 <body>
 <div class="page-wrapper bg-img-1">
-    <h1>Realtime "Reflect" Messages</h1>
+    <p style="color: whitesmoke">Realtime "Reflect" Messages Page</p>
     <div class="messagebox">
         <div class="innerMsgBox">
         <div id="bubs" class="chat-bubbles">
@@ -18,44 +19,5 @@
         </div>
     </div>
 </div>
-<script>
-
-    function fadeOutElement(element, duration) {
-        var opacity = 1;
-        var interval = 5;
-        var step = (interval / duration);
-
-        var fadeOut = setInterval(function() {
-            if (opacity <= 0.05) {
-                clearInterval(fadeOut);
-                element.style.display = 'none';
-            } else {
-                opacity -= step;
-                element.style.opacity = opacity;
-            }
-        }, interval);
-    }
-
-    function notifyHandler(event) {
-        const parts = event.data.split(':');
-        const who = parts[0];
-        const what = parts.slice(1).join(':');
-
-        let d = document.createElement("div");
-        d.className = "chat";
-        d.innerHTML = "<p className=\"name\">" + who + "</p><p className=\"comment\">" + what + "</p>";
-
-        let bubs = document.getElementById("bubs");
-        bubs.append(d);
-        //setTimeout(fadeOutElement, 15000, d, 1000);
-    }
-
-    if(typeof(EventSource) !== "undefined") {
-        let source = new EventSource("sse");
-        source.addEventListener('notify', notifyHandler, false);
-    } else {
-        document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
-    }
-</script>
 </body>
 </html>

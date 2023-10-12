@@ -68,12 +68,14 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 		}
 		logrus.Info("about to read a string :")
 		logrus.Infof("                  read : %s", strings.TrimSpace(line))
-		r.topic.Notify(fmt.Sprintf("event: notify\n"))
 		resp := fmt.Sprintf("you sent me: %s", line)
 		if goaway.IsProfane(line) {
-			resp += "... but please remember to be kind and keep it clean"
+			resp += "... but please remember to be kind and keep it clean. not sending your message..."
+		} else {
+			//let it through
+			r.topic.Notify(fmt.Sprintf("event: notify\n"))
+			r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), line))
 		}
-		r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), line))
 		i++
 		_, _ = rw.WriteString(resp)
 		_ = rw.Flush()

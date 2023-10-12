@@ -1,0 +1,176 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+:root {
+  --delay-fade-const: 250ms;
+  --delay-shrink-const: 1000ms;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: .5;
+  }
+}
+@keyframes fadeShrink {
+  0% {
+    opacity: 1;
+    height: 100px;
+  }
+  70% {
+    opacity: .8;
+  }
+  100% {
+    opacity: .5;
+    height: 0;
+  }
+}
+
+@supports ((-webkit-backdrop-filter: saturate(180%) blur(20px)) or (backdrop-filter: saturate(180%) blur(20px))) {
+  .chat {
+    background: rgba(250, 250, 250, 0.8);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+}
+
+@-webkit-keyframes chat-popup {
+  0% {
+    transform: scale(0);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes chat-popup {
+  0% {
+    transform: scale(0);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+body {
+  font-family: 'Open Sans',Arial, Helvetica, sans-serif;
+}
+
+.chat {
+  background: #eceef2d9;
+  padding: 0.75em;
+  border-radius: .75em;
+  margin: 0.25em;
+  -webkit-animation: chat-popup var(--delay-fade-const) both;
+  animation: chat-popup var(--delay-fade-const) both;
+  transform-origin: bottom right;
+}
+
+.chatter {
+  display: flex;
+  flex-grow: 1;
+  margin: 0 0 0.5em;
+  font-weight: 600;
+  color:#1068fe;
+  overflow: clip;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  min-height: 10vh;
+  position: fixed;
+  width: 400px;
+  border-right: 10px;
+  right: 20px;
+  bottom: 20px;
+  border-radius: 15px;
+  padding: 10px;
+  max-height: 80%;
+}
+
+.bg-img-1 {
+  background: url(http://openziti.io/assets/images/bg-img-01-d31e592729cad752f0a97013a3f2d210.jpg);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: 100% 100%;
+}
+
+.messagebox {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+  justify-content: flex-end;
+  border-radius: 1.1em;
+  max-height: 600px;
+
+  min-width: 100px;
+  margin: 20px;
+  padding: 20px;
+  background: rgba(250, 250, 250, 0.4);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-animation: chat-popup var(--delay-fade-const) both;
+  animation: chat-popup var(--delay-fade-const) both;
+  transform-origin: bottom right;
+}
+
+.innerMsgBox {
+  display: flex;
+  flex-grow: 1;
+  overflow: auto;
+  justify-content: flex-end;
+  flex-direction: row;
+}
+
+.chat-bubbles {
+  display: flex;
+  flex-shrink: 1;
+  flex-direction: column;
+  z-index: 400;
+  align-items: flex-end;
+}
+
+/* CSS for the outer div */
+.fade-out-div {
+  width: 200px;
+  background-color: lightblue;
+  overflow: hidden;
+  transition: height 1s;
+}
+
+/* CSS for the inner content container */
+.inner-content {
+  padding: 10px;
+  transition: transform 1s;
+}
+
+.left-column {
+  flex: 1; /* Takes up remaining space */
+  background-color: #f0f0f0;
+  padding: 10px;
+  flex-grow: 1;
+}
+
+.middle-column {
+  flex: 8; /* Takes up 80% of available space */
+  background-color: #e0e0e0;
+  padding: 10px;
+}
+
+.right-column {
+  flex: 1; /* Takes up 10% of available space */
+  background-color: #d0d0d0;
+  padding: 10px;
+  flex-grow: 1;
+}
