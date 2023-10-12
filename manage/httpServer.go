@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/openziti/edge-api/rest_model"
+	"github.com/openziti/sdk-golang/ziti"
 	"github.com/sirupsen/logrus"
 	"log"
 	"math/rand"
@@ -12,23 +13,56 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 )
 
 type UnderlayServer struct {
-	topic Topic[string]
+	topic              Topic[string]
+	instanceIdentifier string
 }
 
-func StartUnderlayServer(topic Topic[string]) {
-	u := UnderlayServer{
-		topic: topic,
+func NewUnderlayServer(topic Topic[string], instanceIdentifier string) UnderlayServer {
+	return UnderlayServer{
+		topic:              topic,
+		instanceIdentifier: instanceIdentifier,
 	}
-	u.Start()
+}
+
+func (u UnderlayServer) Prepare() *ziti.Config {
+	logrus.Println("Removing demo configuration from " + CtrlAddress)
+	svrId := u.scopedName("demo-server")
+	reflectSvcName := u.ReflectServiceName()
+	svcAttrName := u.scopedName("demo-services")
+	httpSvcName := u.HttpServiceName()
+	bindSp := u.scopedName("demo-server-bind")
+	bindSpRole := u.scopedName("demo.servers")
+	dialSp := u.scopedName("demo-server-dial")
+	dialSpRole := u.scopedName("demo.clients")
+	DeleteIdentity(svrId)
+	DeleteServicePolicy(bindSp)
+	DeleteServicePolicy(dialSp)
+	DeleteService(reflectSvcName)
+	DeleteService(httpSvcName)
+
+	logrus.Println("Adding demo configuration to " + CtrlAddress)
+	CreateService(reflectSvcName, svcAttrName)
+	CreateService(httpSvcName, svcAttrName)
+	CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
+	CreateServicePolicy(bindSp, rest_model.DialBindBind, rest_model.Roles{"#" + bindSpRole}, rest_model.Roles{"#" + svcAttrName})
+	_ = CreateIdentity(rest_model.IdentityTypeDevice, svrId, bindSpRole)
+	time.Sleep(time.Second)
+	return EnrollIdentity(svrId)
+}
+
+func (u UnderlayServer) HttpServiceName() string {
+	return u.scopedName("httpService")
+}
+func (u UnderlayServer) ReflectServiceName() string {
+	return u.scopedName("reflectService")
 }
 
 func (u UnderlayServer) Start() {
 	mux := http.NewServeMux()
-	//mux.Handle("/", http.HandlerFunc(u.serveIndexHTML))
-	//mux.Handle("/overview.png", http.HandlerFunc(u.serveOverview))
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(u.addToOpenZiti))
 	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
@@ -111,10 +145,10 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name = DemoInstanceName + name //add the instance prefix...
+	name = u.scopedName(name)
 
 	DeleteIdentity(name)
-	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, DemoInstanceName+"_demo.clients")
+	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, u.scopedName("demo.clients"))
 
 	tmpl, err := template.ParseFiles("http_content/add-to-openziti-response.html")
 	if err != nil {
@@ -122,18 +156,28 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := struct {
-		Token    string
-		Name     string
-		Instance string
+		Token      string
+		Name       string
+		HttpSvc    string
+		ReflectSvc string
 	}{
-		Token:    createdIdentity.Payload.Data.ID,
-		Name:     name,
-		Instance: DemoInstanceName + "_",
+		Token:      createdIdentity.Payload.Data.ID,
+		Name:       name,
+		HttpSvc:    u.HttpServiceName(),
+		ReflectSvc: u.ReflectServiceName(),
 	}
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (u UnderlayServer) scopedName(name string) string {
+	if u.instanceIdentifier == "" {
+		return name
+	} else {
+		return u.instanceIdentifier + "_" + name
 	}
 }
 

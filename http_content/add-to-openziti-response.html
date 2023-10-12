@@ -1231,6 +1231,7 @@
       background-color: #f5f5f5;
       border: 1px solid #ccc;
       border-radius: 10px;
+      text-align: left;
     }
 
     pre code {
@@ -1307,19 +1308,21 @@
             </h3>
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
-            <h3 class="mb8">Next up, save your token to where you cloned the repo</h3>
+            <h3 class="mb8">Next up, save your token to the cloned the repo</h3>
             <button class="btn btn-primary btn-block mb16" name="action" type="button"
-              onclick="window.location.href ='/download-token?token={{ .Token }}'">
+              onclick="window.location.href ='/download-token?token={{ .Token }}'" style="margin: 10px;">
               Download Token
             </button>
             <p>This token will allow you to securely enroll your device. Once enrolled, it grants your process access to the demo
               services hosted by this server, protected using OpenZiti's application-embedded zero trust design</p>
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
-            <h3 class="mb8">Now, let's run the sample programs!</h3>
-            <pre>go run clients/reflect/reflect.go {{ .Instance }}reflectService {{ .Name }}.jwt
-go run clients/math/math.go {{ .Instance }}httpService {{ .Name }}.jwt 1 + 2
-go run clients/curlz/curlz.go {{ .Instance }}httpService {{ .Name }}.jwt</pre>
+            <h3 class="mb8">Now, run the sample programs!</h3>
+            <p style="text-align: left">Reflect Example:</p>
+            <pre>go run clients/reflect/reflect.go {{ .ReflectSvc }} {{ .Name }}.jwt</pre>
+            <p style="text-align: left">HTTP Examples:</p>
+            <pre>go run clients/math/math.go   {{ .HttpSvc }} {{ .Name }}.jwt    1 + 2
+go run clients/curlz/curlz.go {{ .HttpSvc }} {{ .Name }}.jwt</pre>
           </div>
           <div class="col-md-8 col-md-offset-2 col-sm-12">
             <img src="overview.png" style="background: #f5f5f5; width: 97%;padding: 10px;border-radius: 10px;">
