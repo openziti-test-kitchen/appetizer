@@ -128,7 +128,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	}{
 		Token:    createdIdentity.Payload.Data.ID,
 		Name:     name,
-		Instance: DemoInstanceName,
+		Instance: DemoInstanceName + "_",
 	}
 	err = tmpl.Execute(w, data)
 	if err != nil {
