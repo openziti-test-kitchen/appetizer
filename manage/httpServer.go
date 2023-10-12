@@ -27,13 +27,13 @@ func StartUnderlayServer(topic Topic[string]) {
 
 func (u UnderlayServer) Start() {
 	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(u.serveIndexHTML))
-	mux.Handle("/overview.png", http.HandlerFunc(u.serveOverview))
+	//mux.Handle("/", http.HandlerFunc(u.serveIndexHTML))
+	//mux.Handle("/overview.png", http.HandlerFunc(u.serveOverview))
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(u.addToOpenZiti))
 	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
-
+	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 	var svr *http.Server
 	if DomainName != "" {
 		certmagic.DefaultACME.Agreed = true
@@ -113,7 +113,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	DeleteIdentity(name)
 	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, "demo.clients")
 
-	tmpl, err := template.ParseFiles("add-to-openziti-response.html")
+	tmpl, err := template.ParseFiles("http_content/add-to-openziti-response.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
