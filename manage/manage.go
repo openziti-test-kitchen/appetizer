@@ -179,7 +179,12 @@ func DeleteServicePolicy(servicePolicyName string) {
 	}
 }
 
-func CreateService(serviceName string, attribute string) rest_model.CreateLocation {
+func CreateService(serviceName string, attribute string) {
+	found := FindService(serviceName)
+	if found != "" {
+		logrus.Infof("Service exists. Not recreating service: %s", serviceName)
+		return
+	}
 	encryptOn := true
 	serviceCreate := &rest_model.ServiceCreate{
 		EncryptionRequired: &encryptOn,
@@ -191,12 +196,11 @@ func CreateService(serviceName string, attribute string) rest_model.CreateLocati
 		Context: context.Background(),
 	}
 	serviceParams.SetTimeout(30 * time.Second)
-	resp, err := client.Service.CreateService(serviceParams, nil)
+	_, err := client.Service.CreateService(serviceParams, nil)
 	if err != nil {
 		fmt.Println(err)
 		logrus.Fatal("Failed to create " + serviceName + " service")
 	}
-	return *resp.GetPayload().Data
 }
 
 func CreateIdentity(identType rest_model.IdentityType, identityName string, attributes *rest_model.Attributes) *identity.CreateIdentityCreated {
@@ -261,7 +265,12 @@ func EnrollIdentity(identityName string) *ziti.Config {
 	return conf
 }
 
-func CreateServicePolicy(name string, servType rest_model.DialBind, identityRoles rest_model.Roles, serviceRoles rest_model.Roles) rest_model.CreateLocation {
+func CreateServicePolicy(name string, servType rest_model.DialBind, identityRoles rest_model.Roles, serviceRoles rest_model.Roles) {
+	found := FindServicePolicy(name)
+	if found != "" {
+		logrus.Infof("ServicePolicy exists. Not recreating policy: %s", name)
+		return
+	}
 	defaultSemantic := rest_model.SemanticAllOf
 	servicePolicy := &rest_model.ServicePolicyCreate{
 		IdentityRoles: identityRoles,
@@ -275,11 +284,9 @@ func CreateServicePolicy(name string, servType rest_model.DialBind, identityRole
 		Context: context.Background(),
 	}
 	params.SetTimeout(30 * time.Second)
-	resp, err := client.ServicePolicy.CreateServicePolicy(params, nil)
+	_, err := client.ServicePolicy.CreateServicePolicy(params, nil)
 	if err != nil {
 		fmt.Println(err)
 		logrus.Fatal("Failed to create the " + name + " service policy")
 	}
-
-	return *resp.GetPayload().Data
 }

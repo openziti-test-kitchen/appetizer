@@ -28,9 +28,10 @@ func NewUnderlayServer(topic Topic[string], instanceIdentifier string) UnderlayS
 	}
 }
 
-func (u UnderlayServer) Prepare() *ziti.Config {
+func (u UnderlayServer) Prepare(forceRecreate bool) *ziti.Config {
 	logrus.Println("Removing demo configuration from " + CtrlAddress)
-	svrId := u.scopedName("demo-server")
+	hostname, _ := os.Hostname()
+	svrId := u.scopedName("demo-server-" + hostname)
 	reflectSvcName := u.ReflectServiceName()
 	svcAttrName := u.scopedName("demo-services")
 	httpSvcName := u.HttpServiceName()
@@ -39,10 +40,12 @@ func (u UnderlayServer) Prepare() *ziti.Config {
 	dialSp := u.scopedName("demo-server-dial")
 	dialSpRole := u.scopedName("demo.clients")
 	DeleteIdentity(svrId)
-	DeleteServicePolicy(bindSp)
-	DeleteServicePolicy(dialSp)
-	DeleteService(reflectSvcName)
-	DeleteService(httpSvcName)
+	if forceRecreate {
+		DeleteServicePolicy(bindSp)
+		DeleteServicePolicy(dialSp)
+		DeleteService(reflectSvcName)
+		DeleteService(httpSvcName)
+	}
 
 	logrus.Println("Adding demo configuration to " + CtrlAddress)
 	CreateService(reflectSvcName, svcAttrName)
