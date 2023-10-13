@@ -49,7 +49,8 @@ func (u UnderlayServer) Prepare() *ziti.Config {
 	CreateService(httpSvcName, svcAttrName)
 	CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
 	CreateServicePolicy(bindSp, rest_model.DialBindBind, rest_model.Roles{"#" + bindSpRole}, rest_model.Roles{"#" + svcAttrName})
-	_ = CreateIdentity(rest_model.IdentityTypeDevice, svrId, bindSpRole)
+	bindAttributes := &rest_model.Attributes{bindSpRole, "classifier-clients"}
+	_ = CreateIdentity(rest_model.IdentityTypeDevice, svrId, bindAttributes)
 	time.Sleep(time.Second)
 	return EnrollIdentity(svrId)
 }
@@ -159,7 +160,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	name = u.scopedName(name)
 
 	DeleteIdentity(name)
-	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, u.scopedName("demo.clients"))
+	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
 
 	tmpl, err := template.ParseFiles("http_content/add-to-openziti-response.html")
 	if err != nil {

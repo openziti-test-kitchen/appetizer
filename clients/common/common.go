@@ -23,6 +23,9 @@ func (dc *ZitiDialContext) Dial(_ context.Context, _ string, addr string) (net.C
 
 func NewZitiClient(idFile string) *http.Client {
 	ctx := ContextFromFile(idFile)
+	return NewZitiClientFromContext(ctx)
+}
+func NewZitiClientFromContext(ctx ziti.Context) *http.Client {
 	zitiDialContext := ZitiDialContext{context: ctx}
 
 	zitiTransport := http.DefaultTransport.(*http.Transport).Clone() // copy default transport
