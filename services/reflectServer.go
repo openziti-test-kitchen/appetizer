@@ -82,7 +82,9 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 			resp = fmt.Sprintf("please remember to be kind and keep it clean. not sending your message. you sent me: %s", line)
 		} else {
 			//let it through
-			if r.IsOffensive(line) {
+			isOffensive := r.IsOffensive(line)
+			logrus.Infof("Verifying the line is not offensive: %t, %s", isOffensive, line)
+			if isOffensive {
 				resp = fmt.Sprintf("Your message seems like it might be offensive. We didn't relay it. you sent me: %s", line)
 			} else {
 				// ACTUALLY let it through
