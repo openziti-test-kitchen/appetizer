@@ -19,6 +19,7 @@ import (
 
 var CtrlAddress string
 var DomainName string //if set, will try to use LetsEncrypt to self-bootstrap TLS. __MUST__ listen on 443 if set
+//var DemoInstanceName string //a prefix to use for all objects created by this demo
 
 var client *rest_management_api_client.ZitiEdgeManagement
 
@@ -198,7 +199,7 @@ func CreateService(serviceName string, attribute string) rest_model.CreateLocati
 	return *resp.GetPayload().Data
 }
 
-func CreateIdentity(identType rest_model.IdentityType, identityName string, attributes string) *identity.CreateIdentityCreated {
+func CreateIdentity(identType rest_model.IdentityType, identityName string, attributes *rest_model.Attributes) *identity.CreateIdentityCreated {
 	var isAdmin bool
 	i := &rest_model.IdentityCreate{
 		Enrollment: &rest_model.IdentityCreateEnrollment{
@@ -206,7 +207,7 @@ func CreateIdentity(identType rest_model.IdentityType, identityName string, attr
 		},
 		IsAdmin:                   &isAdmin,
 		Name:                      &identityName,
-		RoleAttributes:            &rest_model.Attributes{attributes},
+		RoleAttributes:            attributes,
 		ServiceHostingCosts:       nil,
 		ServiceHostingPrecedences: nil,
 		Tags:                      nil,

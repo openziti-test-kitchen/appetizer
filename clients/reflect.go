@@ -31,6 +31,7 @@ func main() {
 	conWrite := bufio.NewWriter(svc)
 
 	for {
+		fmt.Print("Enter some text to send: ")
 		text, err := reader.ReadString('\n') //read a line from input
 		if err != nil {
 			fmt.Println(err)
