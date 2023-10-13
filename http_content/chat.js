@@ -31,6 +31,16 @@ function notifyHandler(event) {
 
 if(typeof(EventSource) !== "undefined") {
     let source = new EventSource("sse");
+
+    source.onerror = function(event) {
+        if (event.readyState === EventSource.CLOSED) {
+            // Connection was closed, attempt to reconnect after a delay
+            setTimeout(function() {
+                source = new EventSource('/sse'); // Re-establish the connection
+            }, 2000); // Adjust the delay as needed
+        }
+    };
+
     source.addEventListener('notify', notifyHandler, false);
 } else {
     document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
