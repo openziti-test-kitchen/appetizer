@@ -17,7 +17,7 @@ import (
 	"github.com/openziti/sdk-golang/ziti"
 	"github.com/sirupsen/logrus"
 
-	_ "github.com/TwiN/go-away"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type ReflectServer struct {
@@ -67,6 +67,8 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 	rw := bufio.NewReadWriter(reader, writer)
 
 	i := 0
+	p := bluemonday.UGCPolicy()
+
 	//line delimited
 	for {
 		line, err := rw.ReadString('\n')
@@ -90,7 +92,8 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 				// ACTUALLY let it through
 				resp = fmt.Sprintf("you sent me: %s", line)
 				r.topic.Notify(fmt.Sprintf("event: notify\n"))
-				r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), line))
+				html := p.Sanitize(line)
+				r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), html))
 			}
 		}
 		i++

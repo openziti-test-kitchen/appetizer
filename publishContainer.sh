@@ -2,6 +2,9 @@
 set -eo pipefail
 
 #use to build with no deps: CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/appetizer .
+echo "building appetizer"
+go build -o build/appetizer main.go
+ls -l build/appetizer
 
 echo "<html><body>$(git rev-parse --short HEAD)</body></html>" > http_content/version.html
 
