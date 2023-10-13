@@ -67,7 +67,7 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 	rw := bufio.NewReadWriter(reader, writer)
 
 	i := 0
-	p := bluemonday.UGCPolicy()
+	p := bluemonday.StrictPolicy()
 
 	//line delimited
 	for {
