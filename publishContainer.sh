@@ -3,6 +3,9 @@ set -eo pipefail
 
 #use to build with no deps: CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/appetizer .
 
+echo "<html><body>$(git rev-parse --short HEAD)</body></html>" >> http_content/version.html
+
+
 if [ "local" == "${1}" ]; then
   echo "LOADING LOCALLY instead of pushing to dockerhub"
   _BUILDX_PLATFORM=""
