@@ -35,6 +35,7 @@ func main() {
 		text, err := reader.ReadString('\n') //read a line from input
 		if err != nil {
 			fmt.Println(err)
+			return // exit the program when it reads EOF
 		}
 		bytesRead, err := conWrite.WriteString(text)
 		_ = conWrite.Flush()
@@ -47,6 +48,7 @@ func main() {
 		read, err := conRead.ReadString('\n')
 		if err != nil {
 			fmt.Println(err)
+			return // exit the program when it reads EOF
 		} else {
 			fmt.Println("Received:", read)
 		}
