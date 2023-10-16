@@ -30,15 +30,14 @@ function notifyHandler(event) {
 }
 
 if(typeof(EventSource) !== "undefined") {
-    let source = new EventSource("sse");
+    let source = new EventSource("https://appetizer.openziti.io/sse");
+    console.log("CONNECTED TO SSE")
 
     source.onerror = function(event) {
-        if (event.readyState === EventSource.CLOSED) {
-            // Connection was closed, attempt to reconnect after a delay
-            setTimeout(function() {
-                source = new EventSource('/sse'); // Re-establish the connection
-            }, 2000); // Adjust the delay as needed
-        }
+        setTimeout(function() {
+            source = new EventSource('/sse'); // Re-establish the connection
+        }, 2000); // Adjust the delay as needed
+        console.log("ERROR RECONNECTING")
     };
 
     source.addEventListener('notify', notifyHandler, false);
