@@ -41,6 +41,7 @@ function newEventSourceHandler() {
         source.onerror = function(event) {
             console.error("UNEXPECTED ERROR. RECONNECTING source in 1s")
             if (source) { source.close(); }
+            source = null;
             console.error("UNEXPECTED ERROR. RECONNECTING source in 1s")
             setTimeout(newEventSourceHandler, 1000);
         };
@@ -54,5 +55,5 @@ function newEventSourceHandler() {
 }
 
 
-let source;
+let source = null;
 newEventSourceHandler()
