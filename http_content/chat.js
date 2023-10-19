@@ -50,8 +50,9 @@ function newEventSourceHandler() {
     } else {
         document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
     }
+    setTimeout(newEventSourceHandler, 30)
 }
 
 
 let source;
-setTimeout(newEventSourceHandler, 30)
+newEventSourceHandler()
