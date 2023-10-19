@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/sirupsen/logrus"
@@ -18,12 +19,24 @@ func main() {
 		instanceName = hostname
 		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
 	}
+	recreateNetworkEnv := os.Getenv("OPENZITI_RECREATE_NETWORK")
+	var recreateNetwork bool
+	if recreateNetworkEnv == "" {
+		recreateNetwork = false
+	} else {
+		b, boolParseErr := strconv.ParseBool(recreateNetworkEnv)
+		if boolParseErr != nil {
+			recreateNetwork = false
+		} else {
+			recreateNetwork = b
+		}
+	}
 
 	topic := manage.Topic[string]{}
 	topic.Start()
 
 	u := manage.NewUnderlayServer(topic, instanceName)
-	serverIdentity := u.Prepare()
+	serverIdentity := u.Prepare(recreateNetwork)
 	go u.Start()
 
 	go services.ServeHTTPOverZiti(serverIdentity, u.HttpServiceName())

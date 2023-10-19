@@ -1,4 +1,3 @@
-
 function fadeOutElement(element, duration) {
     var opacity = 1;
     var interval = 5;
@@ -26,22 +25,37 @@ function notifyHandler(event) {
 
     let bubs = document.getElementById("bubs");
     bubs.append(d);
-    setTimeout(fadeOutElement, 10000, d, 1000);
+    setTimeout(fadeOutElement, 30000, d, 1000);
 }
 
-if(typeof(EventSource) !== "undefined") {
-    let source = new EventSource("sse");
-
-    source.onerror = function(event) {
-        if (event.readyState === EventSource.CLOSED) {
-            // Connection was closed, attempt to reconnect after a delay
-            setTimeout(function() {
-                source = new EventSource('/sse'); // Re-establish the connection
-            }, 2000); // Adjust the delay as needed
+function newEventSourceHandler() {
+    if(typeof(EventSource) !== "undefined") {
+        if (source != null) {
+            console.log("closing event source gracefully")
+            source.close();
+            source = null;
         }
-    };
 
-    source.addEventListener('notify', notifyHandler, false);
-} else {
-    document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
+        console.log("connecting to event source at /sse")
+        source = new EventSource("/sse");
+        console.log("CONNECTED TO SSE")
+
+        source.onerror = function(event) {
+            console.error("UNEXPECTED ERROR. RECONNECTING source in 1s")
+            if (source) { source.close(); }
+            source = null;
+            console.error("UNEXPECTED ERROR. RECONNECTING source in 1s")
+            setTimeout(newEventSourceHandler, 1000);
+        };
+
+        source.addEventListener('notify', notifyHandler, false);
+        console.info("notifyHandler listener added")
+    } else {
+        document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
+    }
+    setTimeout(newEventSourceHandler, 30000)
 }
+
+
+let source = null;
+newEventSourceHandler()

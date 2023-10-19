@@ -29,3 +29,4 @@ eval docker buildx build "${_BUILDX_PLATFORM}" "." \
   --tag "openziti/appetizer:${_TAG}" \
   "${_BUILDX_ACTION}"
 
+git checkout http_content/version.html
