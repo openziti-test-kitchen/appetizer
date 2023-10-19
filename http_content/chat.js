@@ -28,34 +28,46 @@ function notifyHandler(event) {
     setTimeout(fadeOutElement, 30000, d, 1000);
 }
 
+let connected = false;
+
 function newEventSourceHandler() {
     if(typeof(EventSource) !== "undefined") {
         if (source != null) {
-            console.log("closing event source gracefully")
+            console.log("closing event source gracefully");
             source.close();
             source = null;
+            connected = false;
+        }
+
+        if (connected) {
+            console.log("already connected. exiting.");
+            return;
         }
 
         console.log("connecting to event source at /sse")
         source = new EventSource("/sse");
-        console.log("CONNECTED TO SSE")
+        connected = true;
+        console.log("CONNECTED TO SSE");
 
         source.onerror = function(event) {
-            console.error("UNEXPECTED ERROR. RECONNECTING source in 1s")
+            console.error("UNEXPECTED ERROR. RECONNECTING source in 1s");
             if (source) { source.close(); }
             source = null;
-            console.error("UNEXPECTED ERROR. RECONNECTING source in 1s")
+            connected = false;
+            console.error("UNEXPECTED ERROR. RECONNECTING source in 1s");
             setTimeout(newEventSourceHandler, 1000);
         };
 
         source.addEventListener('notify', notifyHandler, false);
-        console.info("notifyHandler listener added")
+        console.info("notifyHandler listener added");
+
+        // schedule a reconnect in 30s
+        setTimeout(newEventSourceHandler, 30000);
     } else {
         document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
     }
-    setTimeout(newEventSourceHandler, 30000)
 }
 
 
 let source = null;
-newEventSourceHandler()
+newEventSourceHandler();
