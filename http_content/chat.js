@@ -30,11 +30,13 @@ function notifyHandler(event) {
 
 function newEventSourceHandler() {
     if(typeof(EventSource) !== "undefined") {
-        if (source) {
+        if (source != null) {
             console.log("closing event source gracefully")
             source.close();
+            source = null;
         }
-        console.log("closing event source gracefully")
+
+        console.log("connecting to event source at /sse")
         source = new EventSource("/sse");
         console.log("CONNECTED TO SSE")
 
@@ -51,7 +53,7 @@ function newEventSourceHandler() {
     } else {
         document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
     }
-    setTimeout(newEventSourceHandler, 30)
+    setTimeout(newEventSourceHandler, 30000)
 }
 
 
