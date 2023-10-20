@@ -105,18 +105,7 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 			//let it through
 			isOffensive := r.IsOffensive(line)
 			logrus.Infof("Verifying the line is not offensive: %t, %s", isOffensive, line)
-			/*maa := MattermostAction{
-				Id:   "action_id",
-				Name: "Yes",
-				Integration: MattermostIntegration{
-					Url: "http://someaction:1234/dosomethingmaybe",
-					Context: MattermostContext{
-						Action: "some potential action here",
-					},
-				},
-			}
-			ma.MattermostActions = []MattermostAction{maa}
-			*/
+
 			ma := &MattermostAttachment{
 				Text: line,
 			}
@@ -124,7 +113,7 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 				resp = fmt.Sprintf("Your message seems like it might be offensive. We didn't relay it. you sent me: %s", line)
 				ma.ThumbUrl = offensiveZiggy
 				ma.Color = "#FF0000"
-				ma.Pretext = "An message classified as offensive has been received. Is it actually offensive? "
+				ma.Pretext = "A message classified as offensive has been received. Is it actually offensive? "
 				addPollAction(ma)
 			} else {
 				// ACTUALLY let it through

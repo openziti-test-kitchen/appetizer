@@ -46,7 +46,7 @@ func (u UnderlayServer) Prepare(forceRecreate bool) *ziti.Config {
 		DeleteService(httpSvcName)
 	}
 
-	logrus.Println("Adding demo configuration to " + CtrlAddress)
+	logrus.Infof("Adding demo configuration to %s for identity %s", CtrlAddress, svrId)
 	CreateService(reflectSvcName, svcAttrName)
 	CreateService(httpSvcName, svcAttrName)
 	CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
