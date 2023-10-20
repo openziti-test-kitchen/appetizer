@@ -236,16 +236,20 @@ var coolZiggy = "https://github.com/openziti/branding/blob/main/images/ziggy/clo
 var appetizerZiggy = "https://github.com/openziti/branding/blob/main/images/ziggy/closeups/Ziggy-Chef-Closeup.png?raw=true"
 
 func (r ReflectServer) sendMessage(ma *MattermostAttachment, from string) {
-	m := MattermostHook{
-		Attachments: []MattermostAttachment{*ma},
-		IconUrl:     &appetizerZiggy,
-		Username:    &from,
+	if r.mattermostClient != nil {
+		m := MattermostHook{
+			Attachments: []MattermostAttachment{*ma},
+			IconUrl:     &appetizerZiggy,
+			Username:    &from,
+		}
+		jsonData, _ := json.Marshal(m)
+		bodyReader := bytes.NewBuffer(jsonData)
+		resp, err := r.mattermostClient.Post(r.mattermostUrl, "application/json", bodyReader)
+		if err != nil {
+			logrus.Errorf("error when posting message to mattermost: %v", err)
+		}
+		logrus.Infof("response from mattermost: %v", resp)
+	} else {
+		logrus.Infof("Mattermost not configured. Skipping mattermost send.")
 	}
-	jsonData, _ := json.Marshal(m)
-	bodyReader := bytes.NewBuffer(jsonData)
-	resp, err := r.mattermostClient.Post(r.mattermostUrl, "application/json", bodyReader)
-	if err != nil {
-		logrus.Errorf("error when posting message to mattermost: %v", err)
-	}
-	logrus.Infof("response from mattermost: %v", resp)
 }
