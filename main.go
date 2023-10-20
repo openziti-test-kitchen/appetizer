@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	//logrus.SetLevel(logrus.TraceLevel)
 	instanceName := os.Getenv("OPENZITI_DEMO_INSTANCE")
 	if instanceName == "" {
 		hostname, _ := os.Hostname()

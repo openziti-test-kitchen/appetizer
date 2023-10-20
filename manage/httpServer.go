@@ -30,8 +30,7 @@ func NewUnderlayServer(topic Topic[string], instanceIdentifier string) UnderlayS
 
 func (u UnderlayServer) Prepare(forceRecreate bool) *ziti.Config {
 	logrus.Println("Removing demo configuration from " + CtrlAddress)
-	hostname, _ := os.Hostname()
-	svrId := u.scopedName("demo-server-" + hostname)
+	svrId := u.scopedName("demo-server" + u.instanceIdentifier)
 	reflectSvcName := u.ReflectServiceName()
 	svcAttrName := u.scopedName("demo-services")
 	httpSvcName := u.HttpServiceName()
@@ -71,6 +70,7 @@ func (u UnderlayServer) Start() {
 	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
+	mux.Handle("/taste", http.HandlerFunc(taste))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 
 	// Get the current working directory
@@ -258,4 +258,8 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func taste(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./taste.html")
 }

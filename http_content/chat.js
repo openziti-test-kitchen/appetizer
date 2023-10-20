@@ -62,6 +62,7 @@ function newEventSourceHandler() {
         console.info("notifyHandler listener added");
 
         // schedule a reconnect in 30s
+        console.info("Reconnecting in 30s...");
         setTimeout(newEventSourceHandler, 30000);
     } else {
         document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";

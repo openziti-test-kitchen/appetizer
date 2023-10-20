@@ -18,7 +18,6 @@ func ServeHTTPOverZiti(serverIdentity *ziti.Config, svcName string) {
 	mux.Handle("/", http.HandlerFunc(hello))
 	mux.Handle("/hello", http.HandlerFunc(hello))
 	mux.Handle("/domath", http.HandlerFunc(mathHandler))
-
 	svr.Handler = mux
 
 	if err := svr.Serve(listener); err != nil {
