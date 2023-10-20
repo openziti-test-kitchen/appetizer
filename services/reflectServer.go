@@ -118,8 +118,7 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 			ma.MattermostActions = []MattermostAction{maa}
 			*/
 			ma := &MattermostAttachment{
-				Text:       line,
-				AuthorName: conn.SourceIdentifier(),
+				Text: line,
 			}
 			if isOffensive {
 				resp = fmt.Sprintf("Your message seems like it might be offensive. We didn't relay it. you sent me: %s", line)
@@ -131,13 +130,13 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 				// ACTUALLY let it through
 				ma.ThumbUrl = coolZiggy
 				ma.Color = "#00FF00"
-				ma.Pretext = "Somebody has something to say: "
+				ma.Pretext = "A new message was received: "
 				resp = fmt.Sprintf("you sent me: %s", line)
 				r.topic.Notify(fmt.Sprintf("event: notify\n"))
 				html := p.Sanitize(line)
 				r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), html))
 			}
-			r.sendMessage(ma)
+			r.sendMessage(ma, conn.SourceIdentifier())
 		}
 		i++
 		_, _ = rw.WriteString(resp)
@@ -247,10 +246,11 @@ var offensiveZiggy = "https://raw.githubusercontent.com/openziti/branding/main/i
 var coolZiggy = "https://github.com/openziti/branding/blob/main/images/ziggy/closeups/Ziggy-Cool-Closeup.png?raw=true"
 var appetizerZiggy = "https://github.com/openziti/branding/blob/main/images/ziggy/closeups/Ziggy-Chef-Closeup.png?raw=true"
 
-func (r ReflectServer) sendMessage(ma *MattermostAttachment) {
+func (r ReflectServer) sendMessage(ma *MattermostAttachment, from string) {
 	m := MattermostHook{
 		Attachments: []MattermostAttachment{*ma},
 		IconUrl:     &appetizerZiggy,
+		Username:    &from,
 	}
 	jsonData, _ := json.Marshal(m)
 	bodyReader := bytes.NewBuffer(jsonData)
