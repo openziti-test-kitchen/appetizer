@@ -155,12 +155,8 @@ func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	inputBytes := []byte(who)
 	who64 := base64.StdEncoding.EncodeToString(inputBytes)
-	scheme := "https"
-	if r.TLS == nil {
-		scheme = "http"
-	}
 
-	link := fmt.Sprintf("%s//%s/taste?ziti=%s", scheme, r.Host, who64)
+	link := fmt.Sprintf("https://%s/taste?ziti=%s", r.Host, who64)
 
 	if err != nil {
 		logrus.Warnf("input [%s] could not be base64 encoded? %v", who, err)
