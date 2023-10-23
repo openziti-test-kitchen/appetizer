@@ -147,7 +147,8 @@ func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	who := r.URL.Query().Get("who") + suf
+	whoFromUser := r.URL.Query().Get("who")
+	who := whoFromUser + suf
 	if who == "" {
 		http.Error(w, "Bad Request: Your request is invalid.", http.StatusBadRequest)
 		return
@@ -170,7 +171,7 @@ func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
 		Who  string
 		Link string
 	}{
-		Who:  who,
+		Who:  whoFromUser,
 		Link: link,
 	}
 	err = tmpl.Execute(w, data)
