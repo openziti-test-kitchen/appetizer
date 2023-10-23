@@ -142,7 +142,13 @@ func (r ReflectServer) accept(conn edge.Conn) {
 			if relayMessage {
 				r.topic.Notify(fmt.Sprintf("event: notify\n"))
 				html := p.Sanitize(line)
-				r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), html))
+				source := conn.SourceIdentifier()
+				if strings.ContainsAny(source, "@") {
+					//strip out anything after the @...
+					parts := strings.Split(source, "@")
+					source = parts[0]
+				}
+				r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", source, html))
 			}
 			r.notifyMattermost(ma, conn.SourceIdentifier())
 		}
