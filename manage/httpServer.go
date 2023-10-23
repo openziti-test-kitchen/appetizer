@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -139,9 +140,28 @@ func (u UnderlayServer) messagesHandler(w http.ResponseWriter, r *http.Request) 
 	http.ServeFile(w, r, "./messages.html")
 }
 
+const suf = "_taste"
+
 func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	var name string
-	if r.URL.Query().Get("randomizer") != "" {
+	taster := r.URL.Query().Get("taste")
+	if taster != "" {
+		decodedBytes, err := base64.RawStdEncoding.DecodeString(taster)
+		if err != nil {
+			logrus.Warnf("input [%s] could not be base64 decoded: %v", taster, err)
+			http.Error(w, "Bad Request: Your request is invalid.", http.StatusBadRequest)
+			return
+		}
+		name = strings.TrimSpace(string(decodedBytes))
+		// do just the most minimal amount of checksum'ing... nothing fancy at all...
+		if !strings.HasSuffix(name, suf) {
+			logrus.Warnf("input [%s] was base64 encoded but didn't contain the expected suffix [%s] [%s]: %v", taster, suf, name, err)
+			http.Error(w, "Bad Request: Your request is invalid.", http.StatusBadRequest)
+			return
+		}
+		name = strings.Replace(name, suf, "", -1)
+		logrus.Infof("we have a new taster: %s", name)
+	} else if r.URL.Query().Get("randomizer") != "" {
 		randomId, _ := generateRandomID(8)
 		name = "randomizer_" + randomId
 	} else {
@@ -254,7 +274,7 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 			w.(http.Flusher).Flush() // Flush the response to the client
 		case <-r.Context().Done():
 			u.topic.RemoveReceiver(te)
-			fmt.Println("Client closed connection.")
+			logrus.Debug("Client closed connection.")
 			return
 		}
 	}
