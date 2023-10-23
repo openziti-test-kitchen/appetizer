@@ -68,10 +68,10 @@ func (u UnderlayServer) ReflectServiceName() string {
 func (u UnderlayServer) Start() {
 	mux := http.NewServeMux()
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(u.addToOpenZiti))
+	mux.Handle("/taste", http.HandlerFunc(u.addToOpenZiti))
 	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
-	mux.Handle("/taste", http.HandlerFunc(taste))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 
 	// Get the current working directory
@@ -145,6 +145,9 @@ const suf = "_taste"
 func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	var name string
 	taster := r.URL.Query().Get("taste")
+	if taster == "" {
+		taster = r.URL.Query().Get("ziti")
+	}
 	if taster != "" {
 		decodedBytes, err := base64.RawStdEncoding.DecodeString(taster)
 		if err != nil {
@@ -258,7 +261,7 @@ func generateRandomID(length int) (string, error) {
 }
 
 func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Content-Type", "textFevent-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -278,8 +281,4 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-}
-
-func taste(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./taste.html")
 }
