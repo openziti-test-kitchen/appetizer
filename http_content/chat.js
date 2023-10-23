@@ -39,7 +39,7 @@ function newEventSourceHandler() {
             connected = false;
         }
 
-        if (connected) {
+        if (connected === true) {
             console.log("already connected. exiting.");
             return;
         }

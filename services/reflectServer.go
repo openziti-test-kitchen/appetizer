@@ -20,6 +20,14 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+type OffensiveResult int
+
+const (
+	NOT_OFFENSIVE OffensiveResult = iota
+	COULD_NOT_CLASSIFY
+	OFFENSIVE
+)
+
 type ReflectServer struct {
 	topic            manage.Topic[string]
 	classifierClient *http.Client
@@ -68,7 +76,7 @@ func StartReflectServer(zitiCfg *ziti.Config, serviceName string, topic manage.T
 	logrus.Infof("received %s: shutting down...", s)
 }
 
-func (r *ReflectServer) serve(listener edge.Listener) {
+func (r ReflectServer) serve(listener edge.Listener) {
 	logrus.Infof("ready to accept connections")
 	for {
 		conn, _ := listener.AcceptEdge()
@@ -77,7 +85,7 @@ func (r *ReflectServer) serve(listener edge.Listener) {
 	}
 }
 
-func (r *ReflectServer) accept(conn edge.Conn) {
+func (r ReflectServer) accept(conn edge.Conn) {
 	if conn == nil {
 		logrus.Fatal("connection is nil!")
 	}
@@ -109,23 +117,34 @@ func (r *ReflectServer) accept(conn edge.Conn) {
 			ma := &MattermostAttachment{
 				Text: line,
 			}
-			if isOffensive {
+			relayMessage := false
+			switch isOffensive {
+			case OFFENSIVE:
 				resp = fmt.Sprintf("Your message seems like it might be offensive. We didn't relay it. you sent me: %s", line)
 				ma.ThumbUrl = offensiveZiggy
 				ma.Color = "#FF0000"
 				ma.Pretext = "A message classified as offensive has been received. Is it actually offensive? "
 				addPollAction(ma)
-			} else {
+			case NOT_OFFENSIVE:
 				// ACTUALLY let it through
 				ma.ThumbUrl = coolZiggy
 				ma.Color = "#00FF00"
 				ma.Pretext = "A new message was received: "
 				resp = fmt.Sprintf("you sent me: %s", line)
+				relayMessage = true
+			case COULD_NOT_CLASSIFY:
+				ma.ThumbUrl = questionZiggy
+				ma.Color = "#FFBF00"
+				ma.Pretext = "A new message was received but could not be qualified for offensiveness: "
+				resp = fmt.Sprintf("you sent a message, but it can't be qualified at this time for offensiveness: %s", line)
+				relayMessage = true
+			}
+			if relayMessage {
 				r.topic.Notify(fmt.Sprintf("event: notify\n"))
 				html := p.Sanitize(line)
 				r.topic.Notify(fmt.Sprintf("data: %s:%s\n\n", conn.SourceIdentifier(), html))
 			}
-			r.sendMessage(ma, conn.SourceIdentifier())
+			r.notifyMattermost(ma, conn.SourceIdentifier())
 		}
 		i++
 		_, _ = rw.WriteString(resp)
@@ -159,11 +178,10 @@ type ClassifierResult struct {
 	Score float64 `json:"score"`
 }
 
-func (r ReflectServer) IsOffensive(input string) bool {
-
+func (r ReflectServer) IsOffensive(input string) OffensiveResult {
 	url := "http://classifier-service:80/api/v1/classify"
 
-	logrus.Infof("Classifying input as offensive at: '%s'", url)
+	logrus.Infof("trying to classify input as offensive: '%s'", url)
 	inputBody := ClassifierBody{
 		Text: input,
 	}
@@ -173,15 +191,18 @@ func (r ReflectServer) IsOffensive(input string) bool {
 
 	resp, err := r.classifierClient.Post(url, "application/json", reader)
 	if err != nil {
-		logrus.Error(err)
-		return false
+		if strings.ContainsAny(err.Error(), "has no term") {
+			logrus.Warnf("seems like the classifier services is down. can't classify input [%s]: %v", input, err)
+		} else {
+			logrus.Warnf("could not classify input, unknown error. input:[%s]. error: %v", input, err)
+		}
+		return COULD_NOT_CLASSIFY
 	}
-
 	// Read the response body into a byte slice
 	body, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
 		logrus.Error(readErr)
-		return false
+		return NOT_OFFENSIVE
 	}
 
 	// Create an instance of the struct to unmarshal into
@@ -191,10 +212,14 @@ func (r ReflectServer) IsOffensive(input string) bool {
 	err = json.Unmarshal(body, &results)
 	if err != nil {
 		logrus.Error(readErr)
-		return false
+		return NOT_OFFENSIVE
 	}
 	result := results[0]
-	return result.Label == "Offensive"
+	if result.Label == "Offensive" {
+		return NOT_OFFENSIVE
+	} else {
+		return OFFENSIVE
+	}
 }
 
 type MattermostContext struct {
@@ -231,12 +256,13 @@ type MattermostHook struct {
 	Props       *string                `json:"props"`
 }
 
-var offensiveZiggy = "https://raw.githubusercontent.com/openziti/branding/main/images/ziggy/closeups/Ziggy-Angry-Closeup.png?raw=true"
-var coolZiggy = "https://github.com/openziti/branding/blob/main/images/ziggy/closeups/Ziggy-Cool-Closeup.png?raw=true"
-var appetizerZiggy = "https://github.com/openziti/branding/blob/main/images/ziggy/closeups/Ziggy-Chef-Closeup.png?raw=true"
+var offensiveZiggy = "https://raw.githubusercontent.com/openziti/branding/main/images/ziggy/closeups/Ziggy-Angry-Closeup.png"
+var coolZiggy = "https://raw.githubusercontent.com/openziti/branding/main/images/ziggy/closeups/Ziggy-Cool-Closeup.png"
+var appetizerZiggy = "https://raw.githubusercontent.com/openziti/branding/main/images/ziggy/closeups/Ziggy-Chef-Closeup.png"
+var questionZiggy = "https://raw.githubusercontent.com/openziti/branding/main/images/ziggy/closeups/Ziggy-has-a-Question-Closeup.png"
 
-func (r ReflectServer) sendMessage(ma *MattermostAttachment, from string) {
-	if r.mattermostClient != nil {
+func (r ReflectServer) notifyMattermost(ma *MattermostAttachment, from string) {
+	if r.mattermostClient != nil && r.mattermostUrl != "" {
 		m := MattermostHook{
 			Attachments: []MattermostAttachment{*ma},
 			IconUrl:     &appetizerZiggy,
@@ -244,11 +270,10 @@ func (r ReflectServer) sendMessage(ma *MattermostAttachment, from string) {
 		}
 		jsonData, _ := json.Marshal(m)
 		bodyReader := bytes.NewBuffer(jsonData)
-		resp, err := r.mattermostClient.Post(r.mattermostUrl, "application/json", bodyReader)
+		_, err := r.mattermostClient.Post(r.mattermostUrl, "application/json", bodyReader)
 		if err != nil {
 			logrus.Errorf("error when posting message to mattermost: %v", err)
 		}
-		logrus.Infof("response from mattermost: %v", resp)
 	} else {
 		logrus.Infof("Mattermost not configured. Skipping mattermost send.")
 	}

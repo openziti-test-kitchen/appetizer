@@ -261,7 +261,7 @@ func generateRandomID(length int) (string, error) {
 }
 
 func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "textFevent-stream")
+	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
