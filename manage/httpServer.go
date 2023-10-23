@@ -72,6 +72,7 @@ func (u UnderlayServer) Start() {
 	mux.Handle("/download-token", http.HandlerFunc(u.downloadToken))
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
+	mux.Handle("/getinvite", http.HandlerFunc(u.inviteHandler))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 
 	// Get the current working directory
@@ -138,6 +139,40 @@ func (u UnderlayServer) serveOverview(w http.ResponseWriter, r *http.Request) {
 }
 func (u UnderlayServer) messagesHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./messages.html")
+}
+func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("http_content/invite.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	who := r.URL.Query().Get("who") + suf
+	if who == "" {
+		http.Error(w, "Bad Request: Your request is invalid.", http.StatusBadRequest)
+		return
+	}
+	inputBytes := []byte(who)
+	who64 := base64.StdEncoding.EncodeToString(inputBytes)
+	link := "https://appetizer.openziti.io/taste?ziti=" + who64
+
+	if err != nil {
+		logrus.Warnf("input [%s] could not be base64 encoded? %v", who, err)
+		http.Error(w, "Bad Request: Your request is invalid.", http.StatusBadRequest)
+		return
+	}
+	data := struct {
+		Who  string
+		Link string
+	}{
+		Who:  who,
+		Link: link,
+	}
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 const suf = "_taste"
