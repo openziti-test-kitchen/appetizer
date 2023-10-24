@@ -154,7 +154,7 @@ func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	inputBytes := []byte(who)
-	who64 := base64.StdEncoding.EncodeToString(inputBytes)
+	who64 := base64.RawURLEncoding.EncodeToString(inputBytes)
 
 	link := fmt.Sprintf("https://%s/taste?ziti=%s", r.Host, who64)
 
