@@ -222,9 +222,9 @@ func (r ReflectServer) IsOffensive(input string) OffensiveResult {
 	}
 	result := results[0]
 	if result.Label == "Offensive" {
-		return NOT_OFFENSIVE
-	} else {
 		return OFFENSIVE
+	} else {
+		return NOT_OFFENSIVE
 	}
 }
 
