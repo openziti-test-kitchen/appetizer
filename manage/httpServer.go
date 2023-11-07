@@ -203,8 +203,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		name = strings.Replace(name, suf, "", -1)
 		logrus.Infof("we have a new taster: %s", name)
 	} else if r.URL.Query().Get("randomizer") != "" {
-		randomId, _ := generateRandomID(8)
-		name = "randomizer_" + randomId
+		name = getRandomName()
 	} else {
 		err := r.ParseForm()
 		if err != nil {
@@ -323,10 +322,7 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 
 func (u UnderlayServer) sample(w http.ResponseWriter, r *http.Request) {
 
-	randomId, _ := generateRandomID(8)
-	name := "randomizer_" + randomId
-
-	name = u.scopedName(name)
+	name := u.scopedName(getRandomName())
 
 	DeleteIdentity(name)
 	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
@@ -347,4 +343,9 @@ func (u UnderlayServer) sample(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment; filename="+*id.Data.Name+".jwt")
 	w.Header().Set("Content-Type", "text/plain")
 	_, _ = w.Write([]byte(jwtToken))
+}
+
+func getRandomName() string {
+	randomId, _ := generateRandomID(8)
+	return "randomizer_" + randomId
 }
