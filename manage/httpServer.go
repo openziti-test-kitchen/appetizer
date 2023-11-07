@@ -73,6 +73,7 @@ func (u UnderlayServer) Start() {
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
 	mux.Handle("/getinvite", http.HandlerFunc(u.inviteHandler))
+	mux.Handle("/sample", http.HandlerFunc(u.sample))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 
 	// Get the current working directory
@@ -318,4 +319,32 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (u UnderlayServer) sample(w http.ResponseWriter, r *http.Request) {
+
+	randomId, _ := generateRandomID(8)
+	name := "randomizer_" + randomId
+
+	name = u.scopedName(name)
+
+	DeleteIdentity(name)
+	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
+
+	t := createdIdentity.Payload.Data.ID
+	if t == "" {
+		http.Error(w, "Token not available", http.StatusBadRequest)
+		return
+	}
+
+	id := FindIdentityDetail(t)
+	jwtToken := id.Data.Enrollment.Ott.JWT
+	if jwtToken == "" {
+		http.Error(w, "Token not available", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+*id.Data.Name+".jwt")
+	w.Header().Set("Content-Type", "text/plain")
+	_, _ = w.Write([]byte(jwtToken))
 }
