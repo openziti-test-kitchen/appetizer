@@ -10,13 +10,20 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./curlz <serviceName>\n\n")
+		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./curlz <serviceName> [optional:identityFile]\n\n")
 	}
 	url := os.Args[1]
 	if !strings.HasPrefix(url, "http://") {
 		url = "http://" + url
 	}
-	idFile := common.GetEnrollmentToken()
+
+	var idFile string
+	if len(os.Args) > 2 {
+		idFile = os.Args[2]
+	} else {
+		idFile = common.GetEnrollmentToken()
+		logrus.Infof("identity file not provided, using identity file: %s", idFile)
+	}
 
 	logrus.Infof("Connecting to secure service at: '%s'", url)
 	client := common.NewZitifiedHttpClient(idFile)

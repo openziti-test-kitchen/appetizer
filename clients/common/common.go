@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -68,18 +69,49 @@ func ContextFromFile(idFile string) ziti.Context {
 	return ctx
 }
 
-func GetEnrollmentToken() string {
-	// Scan current directory for random*.jwt (reuse random generated id)
-	//    Scan for random .json file
-	// TODO: Add messages telling user a new identity is being created, also when reusing .jwt
-	if len(os.Args) > 2 {
-		return os.Args[2]
-	}
+func findFiles(root, prefix, suffix string) ([]string, error) {
+	var matchingFiles []string
 
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Check if the file matches the pattern
+		if strings.HasPrefix(info.Name(), prefix) && strings.HasSuffix(info.Name(), suffix) && !info.IsDir() {
+			matchingFiles = append(matchingFiles, path)
+		}
+
+		// If the current path is not the root, skip subdirectories
+		if path != root && info.IsDir() {
+			return filepath.SkipDir
+		}
+
+		return nil
+	})
+
+	return matchingFiles, err
+}
+
+func GetEnrollmentToken() string {
 	ctrl := os.Getenv("OPENZITI_APPETIZER_URL")
 	if ctrl == "" {
 		ctrl = DEFAULT_APPETIZER_URL
 	}
+
+	// Find all files matching the pattern in the directory
+	matchingFiles, err := findFiles(".", "randomizer_", "json")
+	if err != nil {
+		logrus.Fatalf("Error: %s", err)
+	}
+
+	if len(matchingFiles) > 1 {
+		logrus.Fatalf("too many files found matching randomizer_*.json, delete the incorrect file(s)")
+	}
+	if len(matchingFiles) == 1 {
+		return matchingFiles[0]
+	}
+
 	// TODO: make paths constants
 	newIdUrl := ctrl + "/sample"
 	resp, err := http.Get(newIdUrl)
@@ -148,6 +180,7 @@ func enrollHelper(jwt string) {
 		logrus.Fatalf("enrollment successful but the identity file was not able to be written to: %s [%s]", idFilename, encErr)
 	}
 	logrus.Infof("enrolled successfully. identity file written to: %s", idFilename)
+	_ = os.Remove(jwt)
 }
 
 func filenameWithoutJwtExtension(jwt string) string {

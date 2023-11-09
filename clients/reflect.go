@@ -9,14 +9,19 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./reflect <serviceName> [optional:identityFile]\n\n")
+	}
 	serviceName := os.Args[1]
 
-	idFile := ""
-	if len(os.Args) < 2 {
-		idFile = common.GetEnrollmentToken()
-	} else {
+	var idFile string
+	if len(os.Args) > 2 {
 		idFile = os.Args[2]
+	} else {
+		idFile = common.GetEnrollmentToken()
+		logrus.Infof("identity file not provided, using identity file: %s", idFile)
 	}
+
 	ctx := common.ContextFromFile(idFile)
 
 	foundSvc, ok := ctx.GetService(serviceName)

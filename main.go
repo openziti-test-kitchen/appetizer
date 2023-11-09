@@ -13,12 +13,18 @@ import (
 )
 
 func main() {
+
+	isProd := os.Getenv("OPENZITI_IS_PROD")
+	instanceName := ""
 	//logrus.SetLevel(logrus.TraceLevel)
-	instanceName := os.Getenv("OPENZITI_DEMO_INSTANCE")
-	if instanceName == "" {
-		hostname, _ := os.Hostname()
-		instanceName = hostname
-		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+	if isProd != "y" {
+		instanceName = os.Getenv("OPENZITI_DEMO_INSTANCE")
+
+		if instanceName == "" {
+			hostname, _ := os.Hostname()
+			instanceName = hostname
+			logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+		}
 	}
 	recreateNetworkEnv := os.Getenv("OPENZITI_RECREATE_NETWORK")
 	var recreateNetwork bool
