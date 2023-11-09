@@ -1,4 +1,4 @@
-package services
+package overlay
 
 import (
 	"bufio"
@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"openziti-test-kitchen/appetizer/clients/common"
-	"openziti-test-kitchen/appetizer/manage"
+	"openziti-test-kitchen/appetizer/underlay"
 	"os"
 	"strings"
 
@@ -29,14 +29,14 @@ const (
 )
 
 type ReflectServer struct {
-	topic            manage.Topic[string]
+	topic            underlay.Topic[string]
 	classifierClient *http.Client
 	zitiCtx          ziti.Context
 	mattermostClient *http.Client
 	mattermostUrl    string
 }
 
-func StartReflectServer(zitiCfg *ziti.Config, serviceName string, topic manage.Topic[string]) {
+func StartReflectServer(zitiCfg *ziti.Config, serviceName string, topic underlay.Topic[string]) {
 	ctx, err := ziti.NewContext(zitiCfg)
 	if err != nil {
 		logrus.Fatal(err)
@@ -198,7 +198,7 @@ func (r ReflectServer) IsOffensive(input string) OffensiveResult {
 	resp, err := r.classifierClient.Post(url, "application/json", reader)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "has no term") {
-			logrus.Warnf("seems like the classifier services is down. can't classify input [%s]: %v", input, err)
+			logrus.Warnf("seems like the classifier overlay is down. can't classify input [%s]: %v", input, err)
 		} else {
 			logrus.Warnf("could not classify input, unknown error. input:[%s]. error: %v", input, err)
 		}

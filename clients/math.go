@@ -26,7 +26,7 @@ func main() {
 	url = fmt.Sprintf("%s/domath?input1=%s&operator=%s&input2=%s", url, input1, neturl.QueryEscape(operator), input2)
 
 	logrus.Infof("Connecting to secure service at: '%s'", url)
-	resp, err := common.NewZitiClient(os.Args[2]).Get(url)
+	resp, err := common.NewZitifiedHTTPClient(os.Args[2]).Get(url)
 	if err != nil {
 		logrus.Fatal(err)
 	}

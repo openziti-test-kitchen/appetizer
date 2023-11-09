@@ -10,11 +10,18 @@ import (
 
 func main() {
 	serviceName := os.Args[1]
-	ctx := common.ContextFromFile(os.Args[2])
+
+	idFile := ""
+	if len(os.Args) < 2 {
+		idFile = common.GetEnrollmentToken()
+	} else {
+		idFile = os.Args[2]
+	}
+	ctx := common.ContextFromFile(idFile)
 
 	foundSvc, ok := ctx.GetService(serviceName)
 	if !ok {
-		panic("error when retrieving all the services for the provided config")
+		panic("error when retrieving all the overlay for the provided config")
 	}
 	logrus.Infof("found service named: %s", *foundSvc.Name)
 
