@@ -20,22 +20,19 @@ func main() {
 		url = "http://" + url
 	}
 
+	var offset = 0
 	var idFile string
-	var input1 string
-	var operator string
-	var input2 string
 	if len(os.Args) > 6 {
-		input1 = os.Args[3]
-		operator = os.Args[4]
-		input2 = os.Args[5]
 		idFile = os.Args[2]
 	} else {
-		input1 = os.Args[2]
-		operator = os.Args[3]
-		input2 = os.Args[4]
+		// offset by -1 since an identityFile is not provided, others need to be shifted
+		offset = -1
 		idFile = common.GetEnrollmentToken()
 		logrus.Infof("identity file not provided, using identity file: %s", idFile)
 	}
+	input1 := os.Args[3+offset]
+	operator := os.Args[4+offset]
+	input2 := os.Args[5+offset]
 
 	url = fmt.Sprintf("%s/domath?input1=%s&operator=%s&input2=%s", url, input1, neturl.QueryEscape(operator), input2)
 
