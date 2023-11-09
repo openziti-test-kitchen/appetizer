@@ -22,7 +22,7 @@ func main() {
 
 	var offset = 0
 	var idFile string
-	if len(os.Args) > 6 {
+	if len(os.Args) > 5 {
 		idFile = os.Args[2]
 	} else {
 		// offset by -1 since an identityFile is not provided, others need to be shifted
