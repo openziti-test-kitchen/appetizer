@@ -28,8 +28,8 @@ func main() {
 		// offset by -1 since an identityFile is not provided, others need to be shifted
 		offset = -1
 		idFile = common.GetEnrollmentToken()
-		logrus.Infof("identity file not provided, using identity file: %s", idFile)
 	}
+	logrus.Infof("serving identity file: %s", idFile)
 	input1 := os.Args[3+offset]
 	operator := os.Args[4+offset]
 	input2 := os.Args[5+offset]

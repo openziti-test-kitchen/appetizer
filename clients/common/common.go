@@ -109,10 +109,11 @@ func GetEnrollmentToken() string {
 		logrus.Fatalf("too many files found matching randomizer_*.json, delete the incorrect file(s)")
 	}
 	if len(matchingFiles) == 1 {
+		logrus.Infof("identity file found")
 		return matchingFiles[0]
 	}
 
-	// TODO: make paths constants
+	logrus.Infof("no identity file found, ordering a new one")
 	newIdUrl := ctrl + "/sample"
 	resp, err := http.Get(newIdUrl)
 	if err != nil {

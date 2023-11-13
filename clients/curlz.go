@@ -22,8 +22,8 @@ func main() {
 		idFile = os.Args[2]
 	} else {
 		idFile = common.GetEnrollmentToken()
-		logrus.Infof("identity file not provided, using identity file: %s", idFile)
 	}
+	logrus.Infof("serving identity file: %s", idFile)
 
 	logrus.Infof("Connecting to secure service at: '%s'", url)
 	client := common.NewZitifiedHttpClient(idFile)
