@@ -1,4 +1,4 @@
-package manage
+package underlay
 
 import (
 	"encoding/base64"
@@ -8,64 +8,65 @@ import (
 	"github.com/openziti/sdk-golang/ziti"
 	"github.com/sirupsen/logrus"
 	"log"
-	"math/rand"
 	"net"
 	"net/http"
+	"openziti-test-kitchen/appetizer/clients/common"
+	"openziti-test-kitchen/appetizer/manage"
 	"os"
 	"strings"
 	"text/template"
 	"time"
 )
 
-type UnderlayServer struct {
+type Server struct {
 	topic              Topic[string]
 	instanceIdentifier string
 }
 
-func NewUnderlayServer(topic Topic[string], instanceIdentifier string) UnderlayServer {
-	return UnderlayServer{
+func NewUnderlayServer(topic Topic[string], instanceIdentifier string) Server {
+	return Server{
 		topic:              topic,
 		instanceIdentifier: instanceIdentifier,
 	}
 }
 
-func (u UnderlayServer) Prepare(forceRecreate bool) *ziti.Config {
-	logrus.Println("Removing demo configuration from " + CtrlAddress)
+func (u Server) Prepare(forceRecreate bool) *ziti.Config {
+	logrus.Println("Removing demo configuration from " + manage.CtrlAddress)
 	svrId := u.scopedName("demo-server" + u.instanceIdentifier)
 	reflectSvcName := u.ReflectServiceName()
-	svcAttrName := u.scopedName("demo-services")
+	svcAttrName := u.scopedName("demo-overlay")
 	httpSvcName := u.HttpServiceName()
 	bindSp := u.scopedName("demo-server-bind")
 	bindSpRole := u.scopedName("demo.servers")
 	dialSp := u.scopedName("demo-server-dial")
 	dialSpRole := u.scopedName("demo.clients")
-	DeleteIdentity(svrId)
+	manage.DeleteIdentity(svrId)
 	if forceRecreate {
-		DeleteServicePolicy(bindSp)
-		DeleteServicePolicy(dialSp)
-		DeleteService(reflectSvcName)
-		DeleteService(httpSvcName)
+		manage.DeleteServicePolicy(bindSp)
+		manage.DeleteServicePolicy(dialSp)
+		manage.DeleteService(reflectSvcName)
+		manage.DeleteService(httpSvcName)
 	}
 
-	logrus.Infof("Adding demo configuration to %s for identity %s", CtrlAddress, svrId)
-	CreateService(reflectSvcName, svcAttrName)
-	CreateService(httpSvcName, svcAttrName)
-	CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
-	CreateServicePolicy(bindSp, rest_model.DialBindBind, rest_model.Roles{"#" + bindSpRole}, rest_model.Roles{"#" + svcAttrName})
+	logrus.Infof("Adding demo configuration to %s for identity %s", manage.CtrlAddress, svrId)
+	manage.CreateService(reflectSvcName, svcAttrName)
+	manage.CreateService(httpSvcName, svcAttrName)
+	manage.CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
+	manage.CreateServicePolicy(bindSp, rest_model.DialBindBind, rest_model.Roles{"#" + bindSpRole}, rest_model.Roles{"#" + svcAttrName})
 	bindAttributes := &rest_model.Attributes{bindSpRole, "classifier-clients"}
-	_ = CreateIdentity(rest_model.IdentityTypeDevice, svrId, bindAttributes)
+	_ = manage.CreateIdentity(rest_model.IdentityTypeDevice, svrId, bindAttributes)
 	time.Sleep(time.Second)
-	return EnrollIdentity(svrId)
+	return manage.EnrollIdentity(svrId)
 }
 
-func (u UnderlayServer) HttpServiceName() string {
+func (u Server) HttpServiceName() string {
 	return u.scopedName("httpService")
 }
-func (u UnderlayServer) ReflectServiceName() string {
+func (u Server) ReflectServiceName() string {
 	return u.scopedName("reflectService")
 }
 
-func (u UnderlayServer) Start() {
+func (u Server) Start() {
 	mux := http.NewServeMux()
 	mux.Handle("/add-me-to-openziti", http.HandlerFunc(u.addToOpenZiti))
 	mux.Handle("/taste", http.HandlerFunc(u.addToOpenZiti))
@@ -73,6 +74,7 @@ func (u UnderlayServer) Start() {
 	mux.Handle("/sse", http.HandlerFunc(u.sse))
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
 	mux.Handle("/getinvite", http.HandlerFunc(u.inviteHandler))
+	mux.Handle("/sample", http.HandlerFunc(u.sample))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 
 	// Get the current working directory
@@ -86,7 +88,7 @@ func (u UnderlayServer) Start() {
 	fmt.Println("Current Working Directory:", wd)
 
 	var svr *http.Server
-	if DomainName != "" {
+	if manage.DomainName != "" {
 		certmagic.DefaultACME.Agreed = true
 		email := os.Getenv("OPENZITI_ACME_EMAIL")
 		certmagic.DefaultACME.Email = email
@@ -99,15 +101,15 @@ func (u UnderlayServer) Start() {
 			certmagic.DefaultACME.CA = certmagic.LetsEncryptProductionCA
 		}
 
-		err := certmagic.HTTPS([]string{DomainName}, mux)
+		err := certmagic.HTTPS([]string{manage.DomainName}, mux)
 		if err != nil {
 			log.Fatalf("Failed to create https: %v", err)
 		}
-		ln, err := certmagic.Listen([]string{DomainName})
+		ln, err := certmagic.Listen([]string{manage.DomainName})
 		if err != nil {
 			log.Fatalf("Failed to create listener: %v", err)
 		}
-		tlsConfig, err := certmagic.TLS([]string{DomainName})
+		tlsConfig, err := certmagic.TLS([]string{manage.DomainName})
 		if err != nil {
 			log.Fatalf("Failed to create TLS: %v", err)
 		}
@@ -131,16 +133,16 @@ func (u UnderlayServer) Start() {
 	}
 }
 
-func (u UnderlayServer) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
+func (u Server) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./index.html")
 }
-func (u UnderlayServer) serveOverview(w http.ResponseWriter, r *http.Request) {
+func (u Server) serveOverview(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./overview.png")
 }
-func (u UnderlayServer) messagesHandler(w http.ResponseWriter, r *http.Request) {
+func (u Server) messagesHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./messages.html")
 }
-func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
+func (u Server) inviteHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("http_content/invite.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -179,7 +181,7 @@ func (u UnderlayServer) inviteHandler(w http.ResponseWriter, r *http.Request) {
 
 const suf = "_taste"
 
-func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
+func (u Server) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	var name string
 	taster := r.URL.Query().Get("taste")
 	if taster == "" {
@@ -202,8 +204,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		name = strings.Replace(name, suf, "", -1)
 		logrus.Infof("we have a new taster: %s", name)
 	} else if r.URL.Query().Get("randomizer") != "" {
-		randomId, _ := generateRandomID(8)
-		name = "randomizer_" + randomId
+		name = common.GetRandomName()
 	} else {
 		err := r.ParseForm()
 		if err != nil {
@@ -222,8 +223,8 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 
 	name = u.scopedName(name)
 
-	DeleteIdentity(name)
-	createdIdentity := CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
+	manage.DeleteIdentity(name)
+	createdIdentity := manage.CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
 
 	tmpl, err := template.ParseFiles("http_content/add-to-openziti-response.html")
 	if err != nil {
@@ -248,7 +249,7 @@ func (u UnderlayServer) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u UnderlayServer) scopedName(name string) string {
+func (u Server) scopedName(name string) string {
 	if u.instanceIdentifier == "" {
 		return name
 	} else {
@@ -256,14 +257,14 @@ func (u UnderlayServer) scopedName(name string) string {
 	}
 }
 
-func (u UnderlayServer) downloadToken(w http.ResponseWriter, r *http.Request) {
+func (u Server) downloadToken(w http.ResponseWriter, r *http.Request) {
 	t := r.URL.Query().Get("token")
 	if t == "" {
 		http.Error(w, "Token not available", http.StatusBadRequest)
 		return
 	}
 
-	id := FindIdentityDetail(t)
+	id := manage.FindIdentityDetail(t)
 	jwtToken := id.Data.Enrollment.Ott.JWT
 	if jwtToken == "" {
 		http.Error(w, "Token not available", http.StatusBadRequest)
@@ -275,36 +276,14 @@ func (u UnderlayServer) downloadToken(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(jwtToken))
 }
 
-func generateRandomID(length int) (string, error) {
-	if length <= 0 {
-		return "", fmt.Errorf("length must be greater than zero")
-	}
-
-	// Determine how many random bytes we need
-	numBytes := (length * 6) / 8 // 6 bits per character for base64 encoding
-
-	// Generate random bytes
-	randomBytes := make([]byte, numBytes)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
-		return "", err
-	}
-
-	// Encode the random bytes as a base64 string
-	randomID := base64.RawURLEncoding.EncodeToString(randomBytes)
-
-	// Trim the string to the desired length
-	return randomID[:length], nil
-}
-
-func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
+func (u Server) sse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	id, _ := generateRandomID(10)
+	id, _ := common.GenerateRandomID(10)
 	te := u.topic.NewEntry(id)
 
 	for {
@@ -318,4 +297,29 @@ func (u UnderlayServer) sse(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (u Server) sample(w http.ResponseWriter, r *http.Request) {
+
+	name := u.scopedName(common.GetRandomName())
+
+	manage.DeleteIdentity(name)
+	createdIdentity := manage.CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
+
+	t := createdIdentity.Payload.Data.ID
+	if t == "" {
+		http.Error(w, "Token not available", http.StatusBadRequest)
+		return
+	}
+
+	id := manage.FindIdentityDetail(t)
+	jwtToken := id.Data.Enrollment.Ott.JWT
+	if jwtToken == "" {
+		http.Error(w, "Token not available", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+*id.Data.Name+".jwt")
+	w.Header().Set("Content-Type", "text/plain")
+	_, _ = w.Write([]byte(jwtToken))
 }

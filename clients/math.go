@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 6 {
-		fmt.Printf("Insufficient arguments provided\n\nUsage: ./math <serviceName> <identityFile> input1 operator input2\n\n")
+	if len(os.Args) < 5 {
+		fmt.Printf("Insufficient arguments provided\n\nUsage: ./math <serviceName> [optional:identityFile] input1 operator input2\n\n")
 		return
 	}
 	url := os.Args[1]
@@ -20,13 +20,25 @@ func main() {
 		url = "http://" + url
 	}
 
-	input1 := os.Args[3]
-	operator := os.Args[4]
-	input2 := os.Args[5]
+	var offset = 0
+	var idFile string
+	if len(os.Args) > 5 {
+		idFile = os.Args[2]
+	} else {
+		// offset by -1 since an identityFile is not provided, others need to be shifted
+		offset = -1
+		idFile = common.GetEnrollmentToken()
+	}
+	logrus.Infof("serving identity file: %s", idFile)
+	input1 := os.Args[3+offset]
+	operator := os.Args[4+offset]
+	input2 := os.Args[5+offset]
+
 	url = fmt.Sprintf("%s/domath?input1=%s&operator=%s&input2=%s", url, input1, neturl.QueryEscape(operator), input2)
 
 	logrus.Infof("Connecting to secure service at: '%s'", url)
-	resp, err := common.NewZitiClient(os.Args[2]).Get(url)
+	client := common.NewZitifiedHttpClient(idFile)
+	resp, err := client.Get(url)
 	if err != nil {
 		logrus.Fatal(err)
 	}

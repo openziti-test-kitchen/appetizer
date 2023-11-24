@@ -9,12 +9,24 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./reflect <serviceName> [optional:identityFile]\n\n")
+	}
 	serviceName := os.Args[1]
-	ctx := common.ContextFromFile(os.Args[2])
+
+	var idFile string
+	if len(os.Args) > 2 {
+		idFile = os.Args[2]
+	} else {
+		idFile = common.GetEnrollmentToken()
+	}
+	logrus.Infof("serving identity file: %s", idFile)
+
+	ctx := common.ContextFromFile(idFile)
 
 	foundSvc, ok := ctx.GetService(serviceName)
 	if !ok {
-		panic("error when retrieving all the services for the provided config")
+		panic("error when retrieving all the overlay for the provided config")
 	}
 	logrus.Infof("found service named: %s", *foundSvc.Name)
 

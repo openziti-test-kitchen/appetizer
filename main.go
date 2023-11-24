@@ -1,6 +1,7 @@
 package main
 
 import (
+	"openziti-test-kitchen/appetizer/underlay"
 	"os"
 	"os/signal"
 	"strconv"
@@ -8,17 +9,22 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"openziti-test-kitchen/appetizer/manage"
-	"openziti-test-kitchen/appetizer/services"
+	"openziti-test-kitchen/appetizer/overlay"
 )
 
 func main() {
+
+	isProd := os.Getenv("OPENZITI_IS_PROD")
+	instanceName := ""
 	//logrus.SetLevel(logrus.TraceLevel)
-	instanceName := os.Getenv("OPENZITI_DEMO_INSTANCE")
-	if instanceName == "" {
-		hostname, _ := os.Hostname()
-		instanceName = hostname
-		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+	if isProd != "y" {
+		instanceName = os.Getenv("OPENZITI_DEMO_INSTANCE")
+
+		if instanceName == "" {
+			hostname, _ := os.Hostname()
+			instanceName = hostname
+			logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+		}
 	}
 	recreateNetworkEnv := os.Getenv("OPENZITI_RECREATE_NETWORK")
 	var recreateNetwork bool
@@ -33,17 +39,17 @@ func main() {
 		}
 	}
 
-	topic := manage.Topic[string]{}
+	topic := underlay.Topic[string]{}
 	topic.Start()
 
-	u := manage.NewUnderlayServer(topic, instanceName)
+	u := underlay.NewUnderlayServer(topic, instanceName)
 	serverIdentity := u.Prepare(recreateNetwork)
 	go u.Start()
 
-	go services.ServeHTTPOverZiti(serverIdentity, u.HttpServiceName())
+	go overlay.ServeHTTPOverZiti(serverIdentity, u.HttpServiceName())
 	logrus.Println("Started a server listening on the underlay")
 
-	go services.StartReflectServer(serverIdentity, u.ReflectServiceName(), topic)
+	go overlay.StartReflectServer(serverIdentity, u.ReflectServiceName(), topic)
 	logrus.Println("Started an OpenZiti reflect server")
 
 	logrus.Println("Servers running. Waiting for interrupt")
