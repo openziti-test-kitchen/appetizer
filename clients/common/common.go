@@ -78,8 +78,10 @@ func findFiles(root, prefix, suffix string) ([]string, error) {
 		}
 
 		// Check if the file matches the pattern
-		if strings.HasPrefix(info.Name(), prefix) && strings.HasSuffix(info.Name(), suffix) && !info.IsDir() {
-			matchingFiles = append(matchingFiles, path)
+		if strings.HasSuffix(info.Name(), suffix) && !info.IsDir() {
+			if strings.HasPrefix(info.Name(), prefix) {
+				matchingFiles = append(matchingFiles, path)
+			}
 		}
 
 		// If the current path is not the root, skip subdirectories
@@ -100,7 +102,7 @@ func GetEnrollmentToken() string {
 	}
 
 	// Find all files matching the pattern in the directory
-	matchingFiles, err := findFiles(".", "randomizer_", "json")
+	matchingFiles, err := findFiles(".", PrefixedName("randomizer_"), "json")
 	if err != nil {
 		logrus.Fatalf("Error: %s", err)
 	}
@@ -195,7 +197,7 @@ func filenameWithoutJwtExtension(jwt string) string {
 
 func GetRandomName() string {
 	randomId, _ := GenerateRandomID(8)
-	return "randomizer_" + randomId
+	return PrefixedName("randomizer_" + randomId)
 }
 
 func GenerateRandomID(length int) (string, error) {
@@ -218,4 +220,16 @@ func GenerateRandomID(length int) (string, error) {
 
 	// Trim the string to the desired length
 	return randomID[:length], nil
+}
+
+// PrefixedName is a function that accounts for multiple instances of the appetizer service running
+// against the same OpenZiti overlay through the OPENZITI_DEMO_INSTANCE env var
+func PrefixedName(input string) string {
+	instanceName := os.Getenv("OPENZITI_DEMO_INSTANCE")
+	if instanceName == "" {
+		hostname, _ := os.Hostname()
+		instanceName = hostname + "_"
+		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+	}
+	return instanceName + input
 }
