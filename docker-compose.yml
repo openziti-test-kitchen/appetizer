@@ -1,0 +1,62 @@
+services:
+  quickstart:
+    image: openziti/ziti-cli
+    command: edge quickstart --ctrl-address quickstart --router-address quickstart
+    healthcheck:
+      test: ["CMD", "curl", "-sk", "https://quickstart:1280"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    environment:
+      - PFXLOG_NO_JSON=true
+      - ZITI_CTRL_EDGE_ADVERTISED_ADDRESS=quickstart
+    ports:
+      - 1280:1280
+      - 3022:3022
+  default_appetizer:
+    image: openziti/appetizer
+    depends_on:
+      quickstart:
+        condition: service_healthy
+    environment:
+      - OPENZITI_CTRL=https://quickstart:1280
+      - OPENZITI_USER=admin
+      - OPENZITI_PWD=admin
+    ports:
+      - 18004:18000
+  staging_appetizer:
+    image: openziti/appetizer
+    depends_on:
+      quickstart:
+        condition: service_healthy
+    environment:
+      - OPENZITI_CTRL=https://quickstart:1280
+      - OPENZITI_USER=admin
+      - OPENZITI_PWD=admin
+      - OPENZITI_DEMO_INSTANCE=staging
+    ports:
+      - 18001:18000
+  prod_appetizer:
+    image: openziti/appetizer
+    depends_on:
+      quickstart:
+        condition: service_healthy
+    environment:
+      - OPENZITI_CTRL=https://quickstart:1280
+      - OPENZITI_USER=admin
+      - OPENZITI_PWD=admin
+      - OPENZITI_DEMO_INSTANCE=prod
+    ports:
+      - 18002:18000
+  local_appetizer:
+    image: openziti/appetizer
+    depends_on:
+      quickstart:
+        condition: service_healthy
+    environment:
+      - OPENZITI_CTRL=https://quickstart:1280
+      - OPENZITI_USER=admin
+      - OPENZITI_PWD=admin
+      - OPENZITI_DEMO_INSTANCE=local
+    ports:
+      - 18003:18000
