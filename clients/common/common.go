@@ -52,7 +52,6 @@ func ContextFromFile(idFile string) ziti.Context {
 		if _, err := os.Stat(resolvedIdFilename); err == nil {
 			logrus.Infof("using existing file: %s", resolvedIdFilename)
 		} else {
-			logrus.Infof("first time using %s. automatically enrolling to %s", idFile, resolvedIdFilename)
 			enrollHelper(idFile)
 		}
 	}
@@ -107,7 +106,7 @@ func GetEnrollmentToken() string {
 	ctrl := appetizerUrl()
 
 	// Find all files matching the pattern in the directory
-	matchingFiles, err := findFiles(".", "randomizer_", "json")
+	matchingFiles, err := findFiles(".", PrefixedName("randomizer_"), "json")
 	if err != nil {
 		logrus.Fatalf("error: %s", err)
 	}
@@ -116,7 +115,7 @@ func GetEnrollmentToken() string {
 		logrus.Fatalf("too many files found matching randomizer_*.json, delete the incorrect file(s)")
 	}
 	if len(matchingFiles) == 1 {
-		logrus.Infof("identity file found")
+		logrus.Infof("appetizer unfinished. using existing identity file: %s", matchingFiles[0])
 		return matchingFiles[0]
 	}
 
@@ -145,6 +144,7 @@ func GetEnrollmentToken() string {
 		logrus.Fatal(err)
 	}
 
+	logrus.Infof("serving and enrolling identity file: %s", filename)
 	return filename
 }
 
@@ -190,7 +190,7 @@ func enrollHelper(jwt string) {
 	if encErr != nil {
 		logrus.Fatalf("enrollment successful but the identity file was not able to be written to: %s [%s]", idFilename, encErr)
 	}
-	logrus.Infof("enrolled successfully. identity file written to: %s", idFilename)
+	logrus.Infof("strong identity successfully written to: %s", idFilename)
 	_ = os.Remove(jwt)
 }
 
@@ -233,15 +233,6 @@ func GenerateRandomID(length int) (string, error) {
 // PrefixedName is a function that accounts for multiple instances of the appetizer service running
 // against the same OpenZiti overlay through the OPENZITI_DEMO_INSTANCE env var
 func PrefixedName(input string) string {
-	qualifier := InstanceQualifier()
-
-	if qualifier != "" {
-		return qualifier + "_" + input
-	}
-	return input
-}
-
-func InstanceQualifier() string {
 	meta := appetizerUrl() + "/meta"
 	resp, err := http.Get(meta)
 	if err != nil {
@@ -264,8 +255,12 @@ func InstanceQualifier() string {
 			return ""
 		}
 
-		return result["qualifier"]
+		qualifier := result["qualifier"]
+		if qualifier != "" {
+			return qualifier + "_" + input
+		}
+		return input
 	}
 	logrus.Warnf("error: HTTP %d - %s\n", resp.StatusCode, resp.Status)
-	return ""
+	return input
 }

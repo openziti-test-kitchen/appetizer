@@ -29,7 +29,6 @@ func main() {
 		offset = -1
 		idFile = common.GetEnrollmentToken()
 	}
-	logrus.Infof("serving identity file: %s", idFile)
 	input1 := os.Args[3+offset]
 	operator := os.Args[4+offset]
 	input2 := os.Args[5+offset]
