@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"log"
 	"openziti-test-kitchen/appetizer/clients/common"
 	"os"
 )
@@ -12,7 +13,7 @@ func main() {
 	if len(os.Args) < 2 {
 		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./reflect <serviceName> [optional:identityFile]\n\n")
 	}
-	serviceName := os.Args[1]
+	serviceName := common.PrefixedName(os.Args[1])
 
 	var idFile string
 	if len(os.Args) > 2 {
@@ -26,13 +27,13 @@ func main() {
 
 	foundSvc, ok := ctx.GetService(serviceName)
 	if !ok {
-		panic("error when retrieving all the overlay for the provided config")
+		log.Fatalf("service name [%s] was not found?", serviceName)
 	}
 	logrus.Infof("found service named: %s", *foundSvc.Name)
 
 	svc, err := ctx.Dial(serviceName) //dial the service using the given name
 	if err != nil {
-		panic(fmt.Sprintf("error when dialing service name %s. %v", serviceName, err))
+		log.Fatalf("error when dialing service name %s. %v", serviceName, err)
 	}
 	logrus.Infof("Connected to %s successfully.", serviceName)
 	logrus.Info("You may now type a line to be sent to the server (press enter to send)")

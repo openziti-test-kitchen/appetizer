@@ -1,6 +1,8 @@
 module openziti-test-kitchen/appetizer
 
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 require (
 	github.com/TwiN/go-away v1.6.11

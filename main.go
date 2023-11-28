@@ -29,7 +29,7 @@ func main() {
 	recreateNetworkEnv := os.Getenv("OPENZITI_RECREATE_NETWORK")
 	var recreateNetwork bool
 	if recreateNetworkEnv == "" {
-		recreateNetwork = false
+		recreateNetwork = true
 	} else {
 		b, boolParseErr := strconv.ParseBool(recreateNetworkEnv)
 		if boolParseErr != nil {
