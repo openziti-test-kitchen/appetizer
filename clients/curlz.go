@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./curlz <serviceName> [optional:identityFile]\n\n")
+		logrus.Fatal("insufficient arguments provided\n\nUsage: ./curlz <serviceName> [optional:identityFile]\n\n")
 	}
 	url := os.Args[1]
 	if !strings.HasPrefix(url, "http://") {
@@ -25,7 +25,7 @@ func main() {
 	}
 	logrus.Infof("serving identity file: %s", idFile)
 
-	logrus.Infof("Connecting to secure service at: '%s'", url)
+	logrus.Infof("connecting to secure service at: '%s'", url)
 	client := common.NewZitifiedHttpClient(idFile)
 	resp, err := client.Get(url)
 	if err != nil {

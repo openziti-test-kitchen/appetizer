@@ -31,19 +31,19 @@ func init() {
 
 	if zitiAdminUsername == "" || zitiAdminPassword == "" || CtrlAddress == "" {
 		if zitiAdminUsername == "" {
-			logrus.Error("Please set the environment variable: OPENZITI_USER")
+			logrus.Error("please set the environment variable: OPENZITI_USER")
 		}
 		if zitiAdminPassword == "" {
-			logrus.Error("Please set the environment variable: OPENZITI_PWD")
+			logrus.Error("please set the environment variable: OPENZITI_PWD")
 		}
 		if CtrlAddress == "" {
-			logrus.Error("Please set the environment variable: OPENZITI_CTRL")
+			logrus.Error("please set the environment variable: OPENZITI_CTRL")
 		}
-		logrus.Fatal("Cannot continue until these variables are set")
+		logrus.Fatal("cannot continue until these variables are set")
 	}
 
 	if DomainName != "" {
-		logrus.Infof("Domain name is not empty. Server will try to bootstrap TLS for domain [%s] on port 443 (required 443)", DomainName)
+		logrus.Infof("domain name is not empty. server will try to bootstrap TLS for domain [%s] on port 443 (required 443)", DomainName)
 	}
 
 	caCerts, err := rest_util.GetControllerWellKnownCas(CtrlAddress)
@@ -182,7 +182,7 @@ func DeleteServicePolicy(servicePolicyName string) {
 func CreateService(serviceName string, attribute string) {
 	found := FindService(serviceName)
 	if found != "" {
-		logrus.Infof("Service exists. Not recreating service: %s", serviceName)
+		logrus.Infof("service exists. not recreating service: %s", serviceName)
 		return
 	}
 	encryptOn := true
@@ -199,7 +199,7 @@ func CreateService(serviceName string, attribute string) {
 	_, err := client.Service.CreateService(serviceParams, nil)
 	if err != nil {
 		fmt.Println(err)
-		logrus.Fatal("Failed to create " + serviceName + " service")
+		logrus.Fatal("failed to create " + serviceName + " service")
 	}
 }
 
@@ -223,7 +223,7 @@ func CreateIdentity(identType rest_model.IdentityType, identityName string, attr
 	ident, err := client.Identity.CreateIdentity(p, nil)
 	if err != nil {
 		fmt.Println(err)
-		logrus.Fatal("Failed to create the identity")
+		logrus.Fatal("failed to create the identity")
 	}
 
 	return ident
@@ -268,7 +268,7 @@ func EnrollIdentity(identityName string) *ziti.Config {
 func CreateServicePolicy(name string, servType rest_model.DialBind, identityRoles rest_model.Roles, serviceRoles rest_model.Roles) {
 	found := FindServicePolicy(name)
 	if found != "" {
-		logrus.Infof("ServicePolicy exists. Not recreating policy: %s", name)
+		logrus.Infof("servicePolicy exists. not recreating policy: %s", name)
 		return
 	}
 	defaultSemantic := rest_model.SemanticAllOf
@@ -287,6 +287,6 @@ func CreateServicePolicy(name string, servType rest_model.DialBind, identityRole
 	_, err := client.ServicePolicy.CreateServicePolicy(params, nil)
 	if err != nil {
 		fmt.Println(err)
-		logrus.Fatal("Failed to create the " + name + " service policy")
+		logrus.Fatal("failed to create the " + name + " service policy")
 	}
 }
