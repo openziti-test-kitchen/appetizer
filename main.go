@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/sirupsen/logrus"
@@ -16,12 +17,25 @@ func main() {
 	instanceName := ""
 	//logrus.SetLevel(logrus.TraceLevel)
 	instanceName = os.Getenv("OPENZITI_DEMO_INSTANCE")
-	if instanceName == "" {
+	if strings.TrimSpace(instanceName) == "" {
 		hostname, _ := os.Hostname()
 		instanceName = hostname
 		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
 	}
-	logrus.Infof("instanceName set to: %s", instanceName)
+
+	// special case. if this is 'prod' then set the server identifier to ""
+	if strings.ToLower(instanceName) == "prod" {
+		logrus.Infof("prod instance detected. using empty string as instanceIdentifier")
+		instanceName = ""
+		logrus.Infof("instanceName set to: <empty string>")
+	} else {
+		logrus.Infof("instanceName set to: %s", instanceName)
+	}
+
+	topic := underlay.Topic[string]{}
+	topic.Start()
+	u := underlay.NewUnderlayServer(topic, instanceName)
+
 	recreateNetworkEnv := os.Getenv("OPENZITI_RECREATE_NETWORK")
 	var recreateNetwork bool
 	if recreateNetworkEnv == "" {
@@ -35,25 +49,21 @@ func main() {
 		}
 	}
 
-	topic := underlay.Topic[string]{}
-	topic.Start()
-
-	u := underlay.NewUnderlayServer(topic, instanceName)
-	serverIdentity := u.Prepare(recreateNetwork)
+	serverIdentity := u.Prepare("demo-server", recreateNetwork)
 	go u.Start()
 
 	go overlay.ServeHTTPOverZiti(serverIdentity, u.HttpServiceName())
-	logrus.Println("started a server listening on the underlay")
+	logrus.Infof("started a server listening on the underlay")
 
 	go overlay.StartReflectServer(serverIdentity, u.ReflectServiceName(), topic)
-	logrus.Println("started an OpenZiti reflect server")
+	logrus.Infof("started an OpenZiti reflect server")
 
-	logrus.Println("servers running. waiting for interrupt")
+	logrus.Infof("servers running. waiting for interrupt")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
 	case <-ch:
-		logrus.Println("signal to shutdown received")
+		logrus.Infof("signal to shutdown received")
 	}
 }

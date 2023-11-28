@@ -242,10 +242,10 @@ func PrefixedName(input string) string {
 }
 
 func InstanceQualifier() string {
-	appetizer := appetizerUrl()
-	resp, err := http.Get(appetizer + "/meta")
+	meta := appetizerUrl() + "/meta"
+	resp, err := http.Get(meta)
 	if err != nil {
-		panic(err)
+		logrus.Fatalf("could not get metadata from %s", meta)
 	}
 
 	defer func() { _ = resp.Body.Close() }()

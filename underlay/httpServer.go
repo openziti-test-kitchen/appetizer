@@ -31,9 +31,11 @@ func NewUnderlayServer(topic Topic[string], instanceIdentifier string) Server {
 	}
 }
 
-func (u Server) Prepare(forceRecreate bool) *ziti.Config {
-	logrus.Println("removing demo configuration from " + manage.CtrlAddress)
-	svrId := u.scopedName("demo-server")
+func (u Server) Prepare(identityName string, forceRecreate bool) *ziti.Config {
+	logrus.Infof("removing demo configuration from " + manage.CtrlAddress)
+
+	// make the identity based on the instanceIdentifier
+	svrId := u.scopedName(identityName)
 	reflectSvcName := u.ReflectServiceName()
 	svcAttrName := u.scopedName("demo-services")
 	httpSvcName := u.HttpServiceName()
@@ -224,7 +226,6 @@ func (u Server) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name = u.scopedName(name)
-
 	manage.DeleteIdentity(name)
 	createdIdentity := manage.CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
 
@@ -303,7 +304,6 @@ func (u Server) sse(w http.ResponseWriter, r *http.Request) {
 
 func (u Server) sample(w http.ResponseWriter, r *http.Request) {
 	name := u.scopedName(common.GetRandomName())
-
 	manage.DeleteIdentity(name)
 	createdIdentity := manage.CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
 
@@ -326,7 +326,7 @@ func (u Server) sample(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Server) meta(w http.ResponseWriter, r *http.Request) {
-	response := map[string]string{"qualifier": os.Getenv("OPENZITI_DEMO_INSTANCE")}
+	response := map[string]string{"qualifier": u.instanceIdentifier}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

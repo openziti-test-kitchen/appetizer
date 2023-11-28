@@ -112,7 +112,7 @@ func (r ReflectServer) accept(conn edge.Conn) {
 		} else {
 			//let it through
 			isOffensive := r.IsOffensive(line)
-			logrus.Infof("verifying the line is not offensive: %t, %s", isOffensive, line)
+			logrus.Infof("verifying the line is not offensive: %t, %s", isOffensive != 0, line)
 
 			ma := &MattermostAttachment{
 				Text: line,
