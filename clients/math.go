@@ -29,14 +29,13 @@ func main() {
 		offset = -1
 		idFile = common.GetEnrollmentToken()
 	}
-	logrus.Infof("serving identity file: %s", idFile)
 	input1 := os.Args[3+offset]
 	operator := os.Args[4+offset]
 	input2 := os.Args[5+offset]
 
 	url = fmt.Sprintf("%s/domath?input1=%s&operator=%s&input2=%s", url, input1, neturl.QueryEscape(operator), input2)
 
-	logrus.Infof("Connecting to secure service at: '%s'", url)
+	logrus.Infof("connecting to secure service at: '%s'", url)
 	client := common.NewZitifiedHttpClient(idFile)
 	resp, err := client.Get(url)
 	if err != nil {

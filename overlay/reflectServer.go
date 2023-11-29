@@ -57,11 +57,11 @@ func StartReflectServer(zitiCfg *ziti.Config, serviceName string, topic underlay
 	c := ziti.Config{}
 	jsonErr := json.Unmarshal([]byte(ozId), &c)
 	if jsonErr != nil {
-		logrus.Warnf("could not load identity from environment OPENZITI_IDENTITY. Will not attempt to send messages to mattermost: %v", jsonErr)
+		logrus.Warnf("could not load identity from environment OPENZITI_IDENTITY. will not attempt to send messages to mattermost: %v", jsonErr)
 	} else {
 		cfg, err := ziti.NewContext(&c)
 		if err != nil {
-			logrus.Warnf("error when loading identity specified in environment OPENZITI_IDENTITY. Will not attempt to send messages to mattermost: %v", err)
+			logrus.Warnf("error when loading identity specified in environment OPENZITI_IDENTITY. will not attempt to send messages to mattermost: %v", err)
 		} else {
 			r.zitiCtx = cfg
 			r.mattermostClient = common.NewZitiClientFromContext(r.zitiCtx)
@@ -112,7 +112,7 @@ func (r ReflectServer) accept(conn edge.Conn) {
 		} else {
 			//let it through
 			isOffensive := r.IsOffensive(line)
-			logrus.Infof("Verifying the line is not offensive: %t, %s", isOffensive, line)
+			logrus.Infof("verifying the line is not offensive: %t, %s", isOffensive != 0, line)
 
 			ma := &MattermostAttachment{
 				Text: line,
@@ -281,6 +281,6 @@ func (r ReflectServer) notifyMattermost(ma *MattermostAttachment, from string) {
 			logrus.Errorf("error when posting message to mattermost: %v", err)
 		}
 	} else {
-		logrus.Infof("Mattermost not configured. Skipping mattermost send.")
+		logrus.Infof("mattermost not configured. Skipping mattermost send.")
 	}
 }

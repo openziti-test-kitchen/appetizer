@@ -2,6 +2,7 @@ package underlay
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/caddyserver/certmagic"
 	"github.com/openziti/edge-api/rest_model"
@@ -30,11 +31,13 @@ func NewUnderlayServer(topic Topic[string], instanceIdentifier string) Server {
 	}
 }
 
-func (u Server) Prepare(forceRecreate bool) *ziti.Config {
-	logrus.Println("Removing demo configuration from " + manage.CtrlAddress)
-	svrId := u.scopedName("demo-server" + u.instanceIdentifier)
+func (u Server) Prepare(identityName string, forceRecreate bool) *ziti.Config {
+	logrus.Infof("removing demo configuration from " + manage.CtrlAddress)
+
+	// make the identity based on the instanceIdentifier
+	svrId := u.scopedName(identityName)
 	reflectSvcName := u.ReflectServiceName()
-	svcAttrName := u.scopedName("demo-overlay")
+	svcAttrName := u.scopedName("demo-services")
 	httpSvcName := u.HttpServiceName()
 	bindSp := u.scopedName("demo-server-bind")
 	bindSpRole := u.scopedName("demo.servers")
@@ -48,7 +51,7 @@ func (u Server) Prepare(forceRecreate bool) *ziti.Config {
 		manage.DeleteService(httpSvcName)
 	}
 
-	logrus.Infof("Adding demo configuration to %s for identity %s", manage.CtrlAddress, svrId)
+	logrus.Infof("adding demo configuration to %s for identity %s", manage.CtrlAddress, svrId)
 	manage.CreateService(reflectSvcName, svcAttrName)
 	manage.CreateService(httpSvcName, svcAttrName)
 	manage.CreateServicePolicy(dialSp, rest_model.DialBindDial, rest_model.Roles{"#" + dialSpRole}, rest_model.Roles{"#" + svcAttrName})
@@ -75,17 +78,18 @@ func (u Server) Start() {
 	mux.Handle("/messages", http.HandlerFunc(u.messagesHandler))
 	mux.Handle("/getinvite", http.HandlerFunc(u.inviteHandler))
 	mux.Handle("/sample", http.HandlerFunc(u.sample))
+	mux.Handle("/meta", http.HandlerFunc(u.meta))
 	mux.Handle("/", http.FileServer(http.Dir("http_content")))
 
 	// Get the current working directory
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error:", err)
+		logrus.Warnf("could not get working directory. %v", err)
 		return
 	}
 
 	// Print the working directory
-	fmt.Println("Current Working Directory:", wd)
+	logrus.Infof("current working directory: %s", wd)
 
 	var svr *http.Server
 	if manage.DomainName != "" {
@@ -94,10 +98,10 @@ func (u Server) Start() {
 		certmagic.DefaultACME.Email = email
 		ca := os.Getenv("OPENZITI_CA")
 		if ca != "prod" {
-			logrus.Info("Using LetsEncryptStagingCA - not prod")
+			logrus.Info("using LetsEncryptStagingCA - not prod")
 			certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
 		} else {
-			logrus.Info("Using LetsEncryptProductionCA!!! Don't abuse the rate limit")
+			logrus.Info("using LetsEncryptProductionCA!!! don't abuse the rate limit")
 			certmagic.DefaultACME.CA = certmagic.LetsEncryptProductionCA
 		}
 
@@ -213,7 +217,7 @@ func (u Server) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 		}
 
 		name = r.Form.Get("name")
-		logrus.Printf("Received name: %s", name)
+		logrus.Printf("received name: %s", name)
 	}
 
 	if name == "" {
@@ -222,7 +226,6 @@ func (u Server) addToOpenZiti(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name = u.scopedName(name)
-
 	manage.DeleteIdentity(name)
 	createdIdentity := manage.CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
 
@@ -293,16 +296,14 @@ func (u Server) sse(w http.ResponseWriter, r *http.Request) {
 			w.(http.Flusher).Flush() // Flush the response to the client
 		case <-r.Context().Done():
 			u.topic.RemoveReceiver(te)
-			logrus.Debug("Client closed connection.")
+			logrus.Debug("client closed connection.")
 			return
 		}
 	}
 }
 
 func (u Server) sample(w http.ResponseWriter, r *http.Request) {
-
 	name := u.scopedName(common.GetRandomName())
-
 	manage.DeleteIdentity(name)
 	createdIdentity := manage.CreateIdentity(rest_model.IdentityTypeUser, name, &rest_model.Attributes{u.scopedName("demo.clients")})
 
@@ -322,4 +323,13 @@ func (u Server) sample(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment; filename="+*id.Data.Name+".jwt")
 	w.Header().Set("Content-Type", "text/plain")
 	_, _ = w.Write([]byte(jwtToken))
+}
+
+func (u Server) meta(w http.ResponseWriter, r *http.Request) {
+	response := map[string]string{"qualifier": u.instanceIdentifier}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	_ = json.NewEncoder(w).Encode(response)
 }

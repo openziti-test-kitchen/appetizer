@@ -11,7 +11,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		logrus.Fatal("Insufficient arguments provided\n\nUsage: ./reflect <serviceName> [optional:identityFile]\n\n")
+		logrus.Fatal("insufficient arguments provided\n\nUsage: ./reflect <serviceName> [optional:identityFile]\n\n")
 	}
 	serviceName := common.PrefixedName(os.Args[1])
 
@@ -21,7 +21,6 @@ func main() {
 	} else {
 		idFile = common.GetEnrollmentToken()
 	}
-	logrus.Infof("serving identity file: %s", idFile)
 
 	ctx := common.ContextFromFile(idFile)
 
@@ -29,15 +28,15 @@ func main() {
 	if !ok {
 		log.Fatalf("service name [%s] was not found?", serviceName)
 	}
-	logrus.Infof("found service named: %s", *foundSvc.Name)
+	logrus.Debugf("found service named: %s", *foundSvc.Name)
 
 	svc, err := ctx.Dial(serviceName) //dial the service using the given name
 	if err != nil {
 		log.Fatalf("error when dialing service name %s. %v", serviceName, err)
 	}
-	logrus.Infof("Connected to %s successfully.", serviceName)
-	logrus.Info("You may now type a line to be sent to the server (press enter to send)")
-	logrus.Info("The line will be sent to the reflect server and returned")
+	logrus.Infof("end to end encrypted connection to %s established", serviceName)
+	logrus.Info("you may now type a line to be sent to the server (press enter to send)")
+	logrus.Info("the line will be sent to the reflect server and returned")
 
 	reader := bufio.NewReader(os.Stdin) //setup a reader for reading input from the commandline
 	conRead := bufio.NewReader(svc)

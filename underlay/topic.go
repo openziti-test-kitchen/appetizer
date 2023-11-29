@@ -73,7 +73,7 @@ func (t *Topic[T]) removeEntry(action Notifiable[T]) {
 			return
 		}
 	}
-	logrus.Warn("Attempt to remove entry with id %s failed?", action.Id())
+	logrus.Warn("attempt to remove entry with id %s failed?", action.Id())
 }
 
 func (t *Topic[T]) Close() {

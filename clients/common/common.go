@@ -50,9 +50,8 @@ func ContextFromFile(idFile string) ziti.Context {
 		// might need to enroll it if not enrolled already
 		resolvedIdFilename = filenameWithoutJwtExtension(idFile) + ".json"
 		if _, err := os.Stat(resolvedIdFilename); err == nil {
-			logrus.Infof("Using existing file: %s", resolvedIdFilename)
+			logrus.Infof("using existing file: %s", resolvedIdFilename)
 		} else {
-			logrus.Infof("First time using %s. Automatically enrolling to %s", idFile, resolvedIdFilename)
 			enrollHelper(idFile)
 		}
 	}
@@ -95,23 +94,28 @@ func findFiles(root, prefix, suffix string) ([]string, error) {
 	return matchingFiles, err
 }
 
-func GetEnrollmentToken() string {
-	ctrl := os.Getenv("OPENZITI_APPETIZER_URL")
-	if ctrl == "" {
-		ctrl = DEFAULT_APPETIZER_URL
+func appetizerUrl() string {
+	appetizer := os.Getenv("OPENZITI_APPETIZER_URL")
+	if appetizer == "" {
+		appetizer = DEFAULT_APPETIZER_URL
 	}
+	return appetizer
+}
+
+func GetEnrollmentToken() string {
+	ctrl := appetizerUrl()
 
 	// Find all files matching the pattern in the directory
 	matchingFiles, err := findFiles(".", PrefixedName("randomizer_"), "json")
 	if err != nil {
-		logrus.Fatalf("Error: %s", err)
+		logrus.Fatalf("error: %s", err)
 	}
 
 	if len(matchingFiles) > 1 {
 		logrus.Fatalf("too many files found matching randomizer_*.json, delete the incorrect file(s)")
 	}
 	if len(matchingFiles) == 1 {
-		logrus.Infof("identity file found")
+		logrus.Infof("appetizer unfinished. using existing identity file: %s", matchingFiles[0])
 		return matchingFiles[0]
 	}
 
@@ -120,6 +124,9 @@ func GetEnrollmentToken() string {
 	resp, err := http.Get(newIdUrl)
 	if err != nil {
 		logrus.Fatal("cannot connect to controller at " + newIdUrl)
+	}
+	if resp.StatusCode > 299 {
+		logrus.Fatal("there was a problem getting a token from: " + newIdUrl)
 	}
 	filename := getFilenameFromHeader(resp.Header)
 	if filename == "" {
@@ -137,6 +144,7 @@ func GetEnrollmentToken() string {
 		logrus.Fatal(err)
 	}
 
+	logrus.Infof("serving and enrolling identity file: %s", filename)
 	return filename
 }
 
@@ -182,7 +190,7 @@ func enrollHelper(jwt string) {
 	if encErr != nil {
 		logrus.Fatalf("enrollment successful but the identity file was not able to be written to: %s [%s]", idFilename, encErr)
 	}
-	logrus.Infof("enrolled successfully. identity file written to: %s", idFilename)
+	logrus.Infof("strong identity successfully written to: %s", idFilename)
 	_ = os.Remove(jwt)
 }
 
@@ -197,7 +205,7 @@ func filenameWithoutJwtExtension(jwt string) string {
 
 func GetRandomName() string {
 	randomId, _ := GenerateRandomID(8)
-	return PrefixedName("randomizer_" + randomId)
+	return "randomizer_" + randomId
 }
 
 func GenerateRandomID(length int) (string, error) {
@@ -225,11 +233,34 @@ func GenerateRandomID(length int) (string, error) {
 // PrefixedName is a function that accounts for multiple instances of the appetizer service running
 // against the same OpenZiti overlay through the OPENZITI_DEMO_INSTANCE env var
 func PrefixedName(input string) string {
-	instanceName := os.Getenv("OPENZITI_DEMO_INSTANCE")
-	if instanceName == "" {
-		hostname, _ := os.Hostname()
-		instanceName = hostname + "_"
-		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+	meta := appetizerUrl() + "/meta"
+	resp, err := http.Get(meta)
+	if err != nil {
+		logrus.Fatalf("could not get metadata from %s", meta)
 	}
-	return instanceName + input
+
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	// Check if the status code is successful (2xx)
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		var result map[string]string
+		err := json.Unmarshal(body, &result)
+		if err != nil {
+			logrus.Warnf("could not parse metadata? %v", err)
+			return ""
+		}
+
+		qualifier := result["qualifier"]
+		if qualifier != "" {
+			return qualifier + "_" + input
+		}
+		return input
+	}
+	logrus.Warnf("error: HTTP %d - %s\n", resp.StatusCode, resp.Status)
+	return input
 }
