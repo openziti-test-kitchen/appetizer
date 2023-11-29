@@ -21,6 +21,8 @@ func main() {
 		hostname, _ := os.Hostname()
 		instanceName = hostname
 		logrus.Infof("OPENZITI_DEMO_INSTANCE not set. using default of hostname (%s)", hostname)
+		// and set it in case it's asked for again...
+		_ = os.Setenv("OPENZITI_DEMO_INSTANCE", hostname)
 	}
 
 	// special case. if this is 'prod' then set the server identifier to ""
