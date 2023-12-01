@@ -285,6 +285,8 @@ func (u Server) sse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.(http.Flusher).Flush() // Flush the headers to the client
 
 	id, _ := common.GenerateRandomID(10)
 	te := u.topic.NewEntry(id)
