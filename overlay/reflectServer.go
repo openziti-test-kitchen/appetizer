@@ -108,7 +108,7 @@ func (r ReflectServer) accept(conn edge.Conn) {
 	//line delimited
 	for {
 		duration := 60 * time.Second
-		buffer := make([]byte, 1024)
+		buffer := make([]byte, 1024) //1k max
 		line, err := readLineWithTimeout(conn, duration, buffer)
 		if err != nil {
 			var netErr net.Error
@@ -205,6 +205,9 @@ func readLineWithTimeout(conn net.Conn, duration time.Duration, buff []byte) (st
 	// Convert the buffer to a string
 	line := string(buff[:n])
 
+	if len(line) == len(buff) {
+		line += "\n" //add a newline if we hit the limit
+	}
 	return line, nil
 }
 
