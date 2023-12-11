@@ -4,15 +4,18 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	goaway "github.com/TwiN/go-away"
 	"github.com/openziti/sdk-golang/ziti/edge"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"openziti-test-kitchen/appetizer/clients/common"
 	"openziti-test-kitchen/appetizer/underlay"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/openziti/sdk-golang/ziti"
 	"github.com/sirupsen/logrus"
@@ -80,7 +83,6 @@ func (r ReflectServer) serve(listener edge.Listener) {
 	logrus.Infof("ready to accept connections")
 	for {
 		conn, _ := listener.AcceptEdge()
-		logrus.Infof("new connection accepted")
 		go r.accept(conn)
 	}
 }
@@ -89,6 +91,13 @@ func (r ReflectServer) accept(conn edge.Conn) {
 	if conn == nil {
 		logrus.Fatal("connection is nil!")
 	}
+
+	logrus.Infof("accepted connection from %s", conn.SourceIdentifier())
+	defer func() {
+		logrus.Infof("closing connection for %s", conn.SourceIdentifier())
+		_ = conn.Close()
+	}()
+
 	writer := bufio.NewWriter(conn)
 	reader := bufio.NewReader(conn)
 	rw := bufio.NewReadWriter(reader, writer)
@@ -98,9 +107,18 @@ func (r ReflectServer) accept(conn edge.Conn) {
 
 	//line delimited
 	for {
-		line, err := rw.ReadString('\n')
+		duration := 60 * time.Second
+		buffer := make([]byte, 1024)
+		line, err := readLineWithTimeout(conn, duration, buffer)
 		if err != nil {
-			logrus.Error(err)
+			var netErr net.Error
+			ok := errors.As(err, &netErr)
+			if ok && netErr.Timeout() {
+				logrus.Infof("%s idle for longer than timeout (%s)", conn.SourceIdentifier(), duration)
+				return
+			} else if err != nil {
+				logrus.Error(err)
+			}
 			break
 		}
 		logrus.Info("about to read a string :")
@@ -157,6 +175,37 @@ func (r ReflectServer) accept(conn edge.Conn) {
 		_ = rw.Flush()
 		logrus.Infof("       responding with : %s", strings.TrimSpace(resp))
 	}
+}
+
+func readLineWithTimeout(conn net.Conn, duration time.Duration, buff []byte) (string, error) {
+	// Create a buffered reader
+	reader := bufio.NewReader(conn)
+	// Set a timeout for reading a line
+	_ = conn.SetReadDeadline(time.Now().Add(duration))
+
+	n, err := reader.Read(buff)
+	if err != nil {
+		return "", err
+	}
+
+	// Find the position of the first newline character
+	newlineIndex := -1
+	for i := 0; i < n; i++ {
+		if buff[i] == '\n' {
+			newlineIndex = i
+			break
+		}
+	}
+
+	// If a newline is found, discard bytes after the newline
+	if newlineIndex != -1 {
+		n = newlineIndex + 1
+	}
+
+	// Convert the buffer to a string
+	line := string(buff[:n])
+
+	return line, nil
 }
 
 var yes = MattermostAction{
