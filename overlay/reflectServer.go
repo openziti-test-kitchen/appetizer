@@ -172,6 +172,7 @@ func (r ReflectServer) accept(conn edge.Conn) {
 		}
 		i++
 		_, _ = rw.WriteString(resp)
+		_, _ = rw.WriteString("\n")
 		_ = rw.Flush()
 		logrus.Infof("       responding with : %s", strings.TrimSpace(resp))
 	}
