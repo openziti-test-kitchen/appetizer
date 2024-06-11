@@ -115,7 +115,7 @@ func GetEnrollmentToken() string {
 		logrus.Fatalf("too many files found matching randomizer_*.json, delete the incorrect file(s)")
 	}
 	if len(matchingFiles) == 1 {
-		logrus.Infof("appetizer unfinished. using existing identity file: %s", matchingFiles[0])
+		logrus.Infof("using existing identity file: %s", matchingFiles[0])
 		return matchingFiles[0]
 	}
 
