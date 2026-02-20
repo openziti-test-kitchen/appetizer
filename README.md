@@ -44,19 +44,31 @@ go run .\main.go
 
 ## Running with Docker Compose
 
-The `docker-compose.yml` file spins up a full local stack: a ziti quickstart controller and four appetizer
-instances (default, staging, prod, local) each on a different port.
+The `docker-compose.yml` file spins up a full local stack: a ziti quickstart controller and an appetizer
+instance named `local`, available at http://localhost:18000.
 
 ```bash
 docker compose up
 ```
 
-| Instance | Port |
-|---|---|
-| default (hostname) | http://localhost:18004 |
-| staging | http://localhost:18001 |
-| prod | http://localhost:18002 |
-| local | http://localhost:18003 |
+The controller runs inside Docker under the hostname `quickstart`. Clients running on the host need to
+resolve that name, so add this line to `/etc/hosts` (Linux/macOS) or
+`C:\Windows\System32\drivers\etc\hosts` (Windows) before running any client:
+
+```
+127.0.0.1 quickstart
+```
+
+Without this, clients will fail with an error like:
+```
+could not retrieve token URL certificate: could not contact remote server [https://quickstart:1280]
+```
+
+Once the stack is up and `/etc/hosts` is set, run a client against the `local`-namespaced services:
+
+```bash
+go run clients/reflect.go local_reflectService <your-jwt-file>
+```
 
 ## Building and Publishing the Container
 

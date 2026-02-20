@@ -13,42 +13,7 @@ services:
     ports:
       - 1280:1280
       - 3022:3022
-  default_appetizer:
-    image: openziti/appetizer
-    depends_on:
-      quickstart:
-        condition: service_healthy
-    environment:
-      - OPENZITI_CTRL=https://quickstart:1280
-      - OPENZITI_USER=admin
-      - OPENZITI_PWD=admin
-    ports:
-      - 18004:18000
-  staging_appetizer:
-    image: openziti/appetizer
-    depends_on:
-      quickstart:
-        condition: service_healthy
-    environment:
-      - OPENZITI_CTRL=https://quickstart:1280
-      - OPENZITI_USER=admin
-      - OPENZITI_PWD=admin
-      - OPENZITI_DEMO_INSTANCE=staging
-    ports:
-      - 18001:18000
-  prod_appetizer:
-    image: openziti/appetizer
-    depends_on:
-      quickstart:
-        condition: service_healthy
-    environment:
-      - OPENZITI_CTRL=https://quickstart:1280
-      - OPENZITI_USER=admin
-      - OPENZITI_PWD=admin
-      - OPENZITI_DEMO_INSTANCE=prod
-    ports:
-      - 18002:18000
-  local_appetizer:
+  appetizer:
     image: openziti/appetizer
     depends_on:
       quickstart:
@@ -59,4 +24,4 @@ services:
       - OPENZITI_PWD=admin
       - OPENZITI_DEMO_INSTANCE=local
     ports:
-      - 18003:18000
+      - 18000:18000
