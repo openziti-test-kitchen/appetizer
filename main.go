@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
 	instanceName := ""
 	//logrus.SetLevel(logrus.TraceLevel)
 	instanceName = os.Getenv("OPENZITI_DEMO_INSTANCE")
