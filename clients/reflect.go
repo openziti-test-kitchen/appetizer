@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"log"
 	"openziti-test-kitchen/appetizer/clients/common"
 	"os"
+	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -49,20 +51,47 @@ func main() {
 			fmt.Println(err)
 			return // exit the program when it reads EOF
 		}
-		bytesRead, err := conWrite.WriteString(text)
-		_ = conWrite.Flush()
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("wrote", bytesRead, "bytes")
+		write := true
+		for attempts := 0; write && attempts < 3; attempts++ {
+			if attempts > 0 {
+				fmt.Printf("attempt %d of 3\n", attempts+1)
+			}
+			bytesWritten, err := conWrite.WriteString(text)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("wrote", bytesWritten, "bytes")
+			}
+			flushErr := conWrite.Flush()
+			if flushErr != nil {
+				fmt.Println("connection timed out, redialing connection...")
+				svc, err = ctx.Dial(serviceName) //dial the service using the given name
+				if err != nil {
+					log.Fatalf("error when re-dialing service name %s. %v", serviceName, err)
+				}
+				fmt.Println("reconnected.")
+				conRead = bufio.NewReader(svc)
+				conWrite = bufio.NewWriter(svc)
+				continue
+			} else {
+				write = false
+				fmt.Print("Sent    :", text)
+				var read string
+				for {
+					read, err = conRead.ReadString('\n')
+					if err != nil {
+						fmt.Println(err)
+						return // exit the program when it reads EOF
+					}
+					if strings.TrimSpace(read) != "" {
+						break
+					}
+				}
+				fmt.Println("Received:", read)
+			}
 		}
-		fmt.Print("Sent    :", text)
-		read, err := conRead.ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return // exit the program when it reads EOF
-		} else {
-			fmt.Println("Received:", read)
+		if write {
+			fmt.Println("failed to send after 3 attempts, dropping message")
 		}
 	}
 }
